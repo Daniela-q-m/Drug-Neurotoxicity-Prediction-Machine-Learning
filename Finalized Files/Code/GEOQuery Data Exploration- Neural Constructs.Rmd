@@ -1,0 +1,85 @@
+---
+title: "GEOQuery Data Exploration: Neural Constructs"
+output: html_notebook
+---
+
+The purpose of this script is to extract the metadata from GEOQuery in order to link GEO Ids to sample metadata/relevant information. This metadata will be used in further machine leaarning applications and Differential gene expression analysis. 
+
+```{r}
+
+library(dplyr)
+library(tidyverse)
+library(GEOquery)
+```
+
+```{r}
+gse <- getGEO(GEO = 'GSE63935', GSEMatrix = TRUE)
+```
+```{r}
+gse
+```
+```{r}
+
+metadata <- pData(phenoData(gse[[1]])) #First object of the first element in the list. 
+metadata
+```
+
+
+```{r}
+#Select rows of interest I am only interested in day 16 and day 21 samples. These occur in rows 16:303 of the metadata daaframe
+#Select columns of interest. I need Geo accession column, screening chemicals:ch1,title, and relation.1
+metadata.modified <- metadata[16:303,]
+
+```
+```{r}
+#Successfully selected rows of interest from days 16 and 21
+dim(metadata.modified)
+```
+
+
+```{r}
+metadata.modified<- metadata.modified  %>%
+  rename(SRAsample=relation.1 ) %>%
+  mutate(SRAsample= gsub("SRA: https://www.ncbi.nlm.nih.gov/sra?term=", "", SRAsample)) 
+```
+```{r}
+head(metadata.modified)
+```
+
+```{r}
+SRR_ID_day16_day21<-metadata.modified$geo_accession
+```
+```{r}
+SRR_ID_day16_day21
+```
+Now, make two separate lists of IDs in order to filter day 16 and day 21 samples separately.
+Day 16 samples are rows 1:144 of metadata.modified, Day 21 samples are rows 145:288
+```{r}
+metadata.modified
+```
+```{r}
+day_16_ID<-rownames(metadata.modified[1:144,])
+```
+
+
+```{r}
+head(day_16_ID)
+```
+
+```{r}
+day_21_ID<-rownames(metadata.modified[145:288,])
+```
+
+```{r}
+day_21_ID
+```
+```{r}
+#Check if both lists are of the same dimensions (they should be)
+length(day_21_ID)==length(day_16_ID)
+```
+
+
+
+
+
+

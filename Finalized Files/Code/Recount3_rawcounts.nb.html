@@ -1,0 +1,576 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html><head></head><body>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div>
+
+<div class="btn-group pull-right float-right">
+<span>Code</span> <span class="caret"></span>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a rel="noopener" href="#">Show All Code</a></li>
+<li><a rel="noopener" href="#">Hide All Code</a></li>
+<li class="divider"></li>
+<li><a rel="noopener" href="#">Download Rmd</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Recount3 Nerual Contstructs Study for ML</h1>
+
+</div>
+
+
+
+<p>The goal of this script is to download the raw counts for the study. SRA Project Number: SRP050892 With these counts, I will conduct a differential gene expression analysis using DESeq2.</p>
+
+
+
+<pre class="r"><code>BiocManager::install(&quot;LieberInstitute/recount3&quot;)</code></pre>
+
+
+
+
+
+
+<pre class="r"><code>library(&quot;recount3&quot;)</code></pre>
+
+
+
+
+
+
+<pre class="r"><code>human_projects &lt;- available_projects()</code></pre>
+
+
+<pre><code>2022-04-08 23:59:18 caching file sra.recount_project.MD.gz.
+2022-04-08 23:59:18 caching file gtex.recount_project.MD.gz.
+2022-04-08 23:59:19 caching file tcga.recount_project.MD.gz.</code></pre>
+
+
+
+
+<pre class="r"><code>dim(human_projects)</code></pre>
+
+
+<pre><code>[1] 8742    6</code></pre>
+
+
+
+
+<pre class="r"><code>project_info &lt;- subset(
+    human_projects,
+    project == &quot;SRP050892&quot; &amp; project_type == &quot;data_sources&quot;
+)
+project_info</code></pre>
+
+
+<div>
+
+</div>
+
+
+
+
+
+
+<pre class="r"><code>annotation_options(&quot;human&quot;)</code></pre>
+
+
+<pre><code>[1] &quot;gencode_v26&quot; &quot;gencode_v29&quot; &quot;fantom6_cat&quot; &quot;refseq&quot;      &quot;ercc&quot;        &quot;sirv&quot;       </code></pre>
+
+
+
+
+<pre class="r"><code>project_info[, c(&quot;project&quot;, &quot;organism&quot;, &quot;project_home&quot;)]</code></pre>
+
+
+<div>
+
+</div>
+
+
+
+
+<pre class="r"><code>rse_gene_SRP050892 &lt;- create_rse(project_info)</code></pre>
+
+
+
+
+<pre class="r"><code>rse_gene_SRP050892</code></pre>
+
+
+<pre><code>class: RangedSummarizedExperiment 
+dim: 63856 303 
+metadata(8): time_created recount3_version ... annotation recount3_url
+assays(1): raw_counts
+rownames(63856): ENSG00000278704.1 ENSG00000277400.1 ... ENSG00000182484.15_PAR_Y
+  ENSG00000227159.8_PAR_Y
+rowData names(10): source type ... havana_gene tag
+colnames(303): SRR1696208 SRR1696209 ... SRR1696329 SRR1696330
+colData names(175): rail_id external_id ... recount_pred.curated.cell_line BigWigURL</code></pre>
+
+
+
+
+
+
+<pre class="r"><code>metadata_SRP050892&lt;-metadata(rse_gene_SRP050892)</code></pre>
+
+
+
+
+<pre class="r"><code>metadata_SRP050892</code></pre>
+
+
+<pre><code>$time_created
+[1] &quot;2022-04-09 00:09:12 EDT&quot;
+
+$recount3_version</code></pre>
+
+
+<div>
+
+</div>
+
+
+<pre><code>
+$project
+[1] &quot;SRP050892&quot;
+
+$project_home
+[1] &quot;data_sources/sra&quot;
+
+$type
+[1] &quot;gene&quot;
+
+$organism
+[1] &quot;human&quot;
+
+$annotation
+[1] &quot;gencode_v26&quot;
+
+$recount3_url
+[1] &quot;http://duffel.rail.bio/recount3&quot;</code></pre>
+
+
+
+
+<pre class="r"><code>granges_object&lt;-rowRanges(rse_gene_SRP050892)</code></pre>
+
+
+
+
+<pre class="r"><code>head(granges_object)</code></pre>
+
+
+<pre><code>GRanges object with 6 ranges and 10 metadata columns:
+                      seqnames        ranges strand |   source     type bp_length     phase           gene_id
+                         &lt;Rle&gt;     &lt;IRanges&gt;  &lt;Rle&gt; | &lt;factor&gt; &lt;factor&gt; &lt;numeric&gt; &lt;integer&gt;       &lt;character&gt;
+  ENSG00000278704.1 GL000009.2   56140-58376      - |  ENSEMBL     gene      2237      &lt;NA&gt; ENSG00000278704.1
+  ENSG00000277400.1 GL000194.1  53590-115018      - |  ENSEMBL     gene      2179      &lt;NA&gt; ENSG00000277400.1
+  ENSG00000274847.1 GL000194.1  53594-115055      - |  ENSEMBL     gene      1599      &lt;NA&gt; ENSG00000274847.1
+  ENSG00000277428.1 GL000195.1   37434-37534      - |  ENSEMBL     gene       101      &lt;NA&gt; ENSG00000277428.1
+  ENSG00000276256.1 GL000195.1   42939-49164      - |  ENSEMBL     gene      2195      &lt;NA&gt; ENSG00000276256.1
+  ENSG00000278198.1 GL000195.1 173872-179372      + |  ENSEMBL     gene      1468      &lt;NA&gt; ENSG00000278198.1
+                         gene_type   gene_name       level havana_gene         tag
+                       &lt;character&gt; &lt;character&gt; &lt;character&gt; &lt;character&gt; &lt;character&gt;
+  ENSG00000278704.1 protein_coding  BX004987.1           3        &lt;NA&gt;        &lt;NA&gt;
+  ENSG00000277400.1 protein_coding  AC145212.2           3        &lt;NA&gt;        &lt;NA&gt;
+  ENSG00000274847.1 protein_coding  AC145212.1           3        &lt;NA&gt;        &lt;NA&gt;
+  ENSG00000277428.1       misc_RNA       Y_RNA           3        &lt;NA&gt;        &lt;NA&gt;
+  ENSG00000276256.1 protein_coding  AC011043.1           3        &lt;NA&gt;        &lt;NA&gt;
+  ENSG00000278198.1 protein_coding  AC011043.2           3        &lt;NA&gt;        &lt;NA&gt;
+  -------
+  seqinfo: 374 sequences from an unspecified genome; no seqlengths</code></pre>
+
+
+
+
+<pre class="r"><code>geneid&lt;-granges_object$gene_id</code></pre>
+
+
+
+
+
+
+<pre class="r"><code>gene_names&lt;-granges_object$gene_name</code></pre>
+
+
+
+
+
+
+<pre class="r"><code>recount3_cols &lt;- colnames(colData(rse_gene_SRP050892))</code></pre>
+
+
+
+
+<pre class="r"><code>recount3_cols</code></pre>
+
+
+<pre><code>  [1] &quot;rail_id&quot;                                                           
+  [2] &quot;external_id&quot;                                                       
+  [3] &quot;study&quot;                                                             
+  [4] &quot;sra.sample_acc.x&quot;                                                  
+  [5] &quot;sra.experiment_acc&quot;                                                
+  [6] &quot;sra.submission_acc&quot;                                                
+  [7] &quot;sra.submission_center&quot;                                             
+  [8] &quot;sra.submission_lab&quot;                                                
+  [9] &quot;sra.study_title&quot;                                                   
+ [10] &quot;sra.study_abstract&quot;                                                
+ [11] &quot;sra.study_description&quot;                                             
+ [12] &quot;sra.experiment_title&quot;                                              
+ [13] &quot;sra.design_description&quot;                                            
+ [14] &quot;sra.sample_description&quot;                                            
+ [15] &quot;sra.library_name&quot;                                                  
+ [16] &quot;sra.library_strategy&quot;                                              
+ [17] &quot;sra.library_source&quot;                                                
+ [18] &quot;sra.library_selection&quot;                                             
+ [19] &quot;sra.library_layout&quot;                                                
+ [20] &quot;sra.paired_nominal_length&quot;                                         
+ [21] &quot;sra.paired_nominal_stdev&quot;                                          
+ [22] &quot;sra.library_construction_protocol&quot;                                 
+ [23] &quot;sra.platform_model&quot;                                                
+ [24] &quot;sra.sample_attributes&quot;                                             
+ [25] &quot;sra.experiment_attributes&quot;                                         
+ [26] &quot;sra.spot_length&quot;                                                   
+ [27] &quot;sra.sample_name&quot;                                                   
+ [28] &quot;sra.sample_title&quot;                                                  
+ [29] &quot;sra.sample_bases&quot;                                                  
+ [30] &quot;sra.sample_spots&quot;                                                  
+ [31] &quot;sra.run_published&quot;                                                 
+ [32] &quot;sra.size&quot;                                                          
+ [33] &quot;sra.run_total_bases&quot;                                               
+ [34] &quot;sra.run_total_spots&quot;                                               
+ [35] &quot;sra.num_reads&quot;                                                     
+ [36] &quot;sra.num_spots&quot;                                                     
+ [37] &quot;sra.read_info&quot;                                                     
+ [38] &quot;sra.run_alias&quot;                                                     
+ [39] &quot;sra.run_center_name&quot;                                               
+ [40] &quot;sra.run_broker_name&quot;                                               
+ [41] &quot;sra.run_center&quot;                                                    
+ [42] &quot;recount_project.project&quot;                                           
+ [43] &quot;recount_project.organism&quot;                                          
+ [44] &quot;recount_project.file_source&quot;                                       
+ [45] &quot;recount_project.metadata_source&quot;                                   
+ [46] &quot;recount_project.date_processed&quot;                                    
+ [47] &quot;recount_qc.aligned_reads%.chrm&quot;                                    
+ [48] &quot;recount_qc.aligned_reads%.chrx&quot;                                    
+ [49] &quot;recount_qc.aligned_reads%.chry&quot;                                    
+ [50] &quot;recount_qc.bc_auc.all_reads_all_bases&quot;                             
+ [51] &quot;recount_qc.bc_auc.all_reads_annotated_bases&quot;                       
+ [52] &quot;recount_qc.bc_auc.unique_reads_all_bases&quot;                          
+ [53] &quot;recount_qc.bc_auc.unique_reads_annotated_bases&quot;                    
+ [54] &quot;recount_qc.bc_auc.all_%&quot;                                           
+ [55] &quot;recount_qc.bc_auc.unique_%&quot;                                        
+ [56] &quot;recount_qc.bc_frag.count&quot;                                          
+ [57] &quot;recount_qc.bc_frag.kallisto_count&quot;                                 
+ [58] &quot;recount_qc.bc_frag.kallisto_mean_length&quot;                           
+ [59] &quot;recount_qc.bc_frag.mean_length&quot;                                    
+ [60] &quot;recount_qc.bc_frag.mode_length&quot;                                    
+ [61] &quot;recount_qc.bc_frag.mode_length_count&quot;                              
+ [62] &quot;recount_qc.exon_fc.all_%&quot;                                          
+ [63] &quot;recount_qc.exon_fc.unique_%&quot;                                       
+ [64] &quot;recount_qc.exon_fc_count_all.total&quot;                                
+ [65] &quot;recount_qc.exon_fc_count_all.assigned&quot;                             
+ [66] &quot;recount_qc.exon_fc_count_unique.total&quot;                             
+ [67] &quot;recount_qc.exon_fc_count_unique.assigned&quot;                          
+ [68] &quot;recount_qc.gene_fc.all_%&quot;                                          
+ [69] &quot;recount_qc.gene_fc.unique_%&quot;                                       
+ [70] &quot;recount_qc.gene_fc_count_all.total&quot;                                
+ [71] &quot;recount_qc.gene_fc_count_all.assigned&quot;                             
+ [72] &quot;recount_qc.gene_fc_count_unique.total&quot;                             
+ [73] &quot;recount_qc.gene_fc_count_unique.assigned&quot;                          
+ [74] &quot;recount_qc.intron_sum&quot;                                             
+ [75] &quot;recount_qc.intron_sum_%&quot;                                           
+ [76] &quot;recount_qc.star.%_of_chimeric_reads&quot;                               
+ [77] &quot;recount_qc.star.%_of_chimeric_reads2&quot;                              
+ [78] &quot;recount_qc.star.%_of_reads_mapped_to_multiple_loci&quot;                
+ [79] &quot;recount_qc.star.%_of_reads_mapped_to_multiple_loci2&quot;               
+ [80] &quot;recount_qc.star.%_of_reads_mapped_to_too_many_loci&quot;                
+ [81] &quot;recount_qc.star.%_of_reads_mapped_to_too_many_loci2&quot;               
+ [82] &quot;recount_qc.star.%_of_reads_unmapped:_other&quot;                        
+ [83] &quot;recount_qc.star.%_of_reads_unmapped:_other2&quot;                       
+ [84] &quot;recount_qc.star.%_of_reads_unmapped:_too_many_mismatches&quot;          
+ [85] &quot;recount_qc.star.%_of_reads_unmapped:_too_many_mismatches2&quot;         
+ [86] &quot;recount_qc.star.%_of_reads_unmapped:_too_short&quot;                    
+ [87] &quot;recount_qc.star.%_of_reads_unmapped:_too_short2&quot;                   
+ [88] &quot;recount_qc.star.all_mapped_reads&quot;                                  
+ [89] &quot;recount_qc.star.all_mapped_reads2&quot;                                 
+ [90] &quot;recount_qc.star.average_input_read_length&quot;                         
+ [91] &quot;recount_qc.star.average_input_read_length2&quot;                        
+ [92] &quot;recount_qc.star.average_mapped_length&quot;                             
+ [93] &quot;recount_qc.star.average_mapped_length2&quot;                            
+ [94] &quot;recount_qc.star.deletion_average_length&quot;                           
+ [95] &quot;recount_qc.star.deletion_average_length2&quot;                          
+ [96] &quot;recount_qc.star.deletion_rate_per_base&quot;                            
+ [97] &quot;recount_qc.star.deletion_rate_per_base2&quot;                           
+ [98] &quot;recount_qc.star.insertion_average_length&quot;                          
+ [99] &quot;recount_qc.star.insertion_average_length2&quot;                         
+[100] &quot;recount_qc.star.insertion_rate_per_base&quot;                           
+[101] &quot;recount_qc.star.insertion_rate_per_base2&quot;                          
+[102] &quot;recount_qc.star.mapping_speed,_million_of_reads_per_hour&quot;          
+[103] &quot;recount_qc.star.mapping_speed,_million_of_reads_per_hour2&quot;         
+[104] &quot;recount_qc.star.mismatch_rate_per_base,_%&quot;                         
+[105] &quot;recount_qc.star.mismatch_rate_per_base,_%2&quot;                        
+[106] &quot;recount_qc.star.number_of_chimeric_reads&quot;                          
+[107] &quot;recount_qc.star.number_of_chimeric_reads2&quot;                         
+[108] &quot;recount_qc.star.number_of_input_reads&quot;                             
+[109] &quot;recount_qc.star.number_of_input_reads2&quot;                            
+[110] &quot;recount_qc.star.number_of_reads_mapped_to_multiple_loci&quot;           
+[111] &quot;recount_qc.star.number_of_reads_mapped_to_multiple_loci2&quot;          
+[112] &quot;recount_qc.star.number_of_reads_mapped_to_too_many_loci&quot;           
+[113] &quot;recount_qc.star.number_of_reads_mapped_to_too_many_loci2&quot;          
+[114] &quot;recount_qc.star.number_of_reads_unmapped:_other&quot;                   
+[115] &quot;recount_qc.star.number_of_reads_unmapped:_other2&quot;                  
+[116] &quot;recount_qc.star.number_of_reads_unmapped:_too_many_mismatches&quot;     
+[117] &quot;recount_qc.star.number_of_reads_unmapped:_too_many_mismatches2&quot;    
+[118] &quot;recount_qc.star.number_of_reads_unmapped:_too_short&quot;               
+[119] &quot;recount_qc.star.number_of_reads_unmapped:_too_short2&quot;              
+[120] &quot;recount_qc.star.number_of_splices:_at/ac&quot;                          
+[121] &quot;recount_qc.star.number_of_splices:_at/ac2&quot;                         
+[122] &quot;recount_qc.star.number_of_splices:_annotated_(sjdb)&quot;               
+[123] &quot;recount_qc.star.number_of_splices:_annotated_(sjdb)2&quot;              
+[124] &quot;recount_qc.star.number_of_splices:_gc/ag&quot;                          
+[125] &quot;recount_qc.star.number_of_splices:_gc/ag2&quot;                         
+[126] &quot;recount_qc.star.number_of_splices:_gt/ag&quot;                          
+[127] &quot;recount_qc.star.number_of_splices:_gt/ag2&quot;                         
+[128] &quot;recount_qc.star.number_of_splices:_non-canonical&quot;                  
+[129] &quot;recount_qc.star.number_of_splices:_non-canonical2&quot;                 
+[130] &quot;recount_qc.star.number_of_splices:_total&quot;                          
+[131] &quot;recount_qc.star.number_of_splices:_total2&quot;                         
+[132] &quot;recount_qc.star.uniquely_mapped_reads_%&quot;                           
+[133] &quot;recount_qc.star.uniquely_mapped_reads_%2&quot;                          
+[134] &quot;recount_qc.star.uniquely_mapped_reads_number&quot;                      
+[135] &quot;recount_qc.star.uniquely_mapped_reads_number2&quot;                     
+[136] &quot;recount_qc.junction_count&quot;                                         
+[137] &quot;recount_qc.junction_coverage&quot;                                      
+[138] &quot;recount_qc.junction_avg_coverage&quot;                                  
+[139] &quot;recount_qc.star.number_of_input_reads_both&quot;                        
+[140] &quot;recount_qc.star.all_mapped_reads_both&quot;                             
+[141] &quot;recount_qc.star.number_of_chimeric_reads_both&quot;                     
+[142] &quot;recount_qc.star.number_of_reads_mapped_to_multiple_loci_both&quot;      
+[143] &quot;recount_qc.star.number_of_reads_mapped_to_too_many_loci_both&quot;      
+[144] &quot;recount_qc.star.number_of_reads_unmapped:_other_both&quot;              
+[145] &quot;recount_qc.star.number_of_reads_unmapped:_too_many_mismatches_both&quot;
+[146] &quot;recount_qc.star.number_of_reads_unmapped:_too_short_both&quot;          
+[147] &quot;recount_qc.star.uniquely_mapped_reads_number_both&quot;                 
+[148] &quot;recount_qc.star.%_mapped_reads_both&quot;                               
+[149] &quot;recount_qc.star.%_chimeric_reads_both&quot;                             
+[150] &quot;recount_qc.star.%_reads_mapped_to_multiple_loci_both&quot;              
+[151] &quot;recount_qc.star.%_reads_mapped_to_too_many_loci_both&quot;              
+[152] &quot;recount_qc.star.%_reads_unmapped:_other_both&quot;                      
+[153] &quot;recount_qc.star.%_reads_unmapped:_too_many_mismatches_both&quot;        
+[154] &quot;recount_qc.star.%_reads_unmapped:_too_short_both&quot;                  
+[155] &quot;recount_qc.star.uniquely_mapped_reads_%_both&quot;                      
+[156] &quot;recount_seq_qc.min_len&quot;                                            
+[157] &quot;recount_seq_qc.max_len&quot;                                            
+[158] &quot;recount_seq_qc.avg_len&quot;                                            
+[159] &quot;recount_seq_qc.#distinct_quality_values&quot;                           
+[160] &quot;recount_seq_qc.#bases&quot;                                             
+[161] &quot;recount_seq_qc.%a&quot;                                                 
+[162] &quot;recount_seq_qc.%c&quot;                                                 
+[163] &quot;recount_seq_qc.%g&quot;                                                 
+[164] &quot;recount_seq_qc.%t&quot;                                                 
+[165] &quot;recount_seq_qc.%n&quot;                                                 
+[166] &quot;recount_seq_qc.avgq&quot;                                               
+[167] &quot;recount_seq_qc.errq&quot;                                               
+[168] &quot;recount_pred.sample_acc.y&quot;                                         
+[169] &quot;recount_pred.curated.type&quot;                                         
+[170] &quot;recount_pred.curated.tissue&quot;                                       
+[171] &quot;recount_pred.pattern.predict.type&quot;                                 
+[172] &quot;recount_pred.pred.type&quot;                                            
+[173] &quot;recount_pred.curated.cell_type&quot;                                    
+[174] &quot;recount_pred.curated.cell_line&quot;                                    
+[175] &quot;BigWigURL&quot;                                                         </code></pre>
+
+
+
+
+
+
+<pre class="r"><code>rse_gene_SRP050892_expanded &lt;-
+    expand_sra_attributes(rse_gene_SRP050892)
+colData(rse_gene_SRP050892_expanded)[, ncol(colData(rse_gene_SRP050892)):ncol(colData(rse_gene_SRP050892_expanded))]</code></pre>
+
+
+<pre><code>DataFrame with 303 rows and 3 columns
+                        BigWigURL sra_attribute.screening_chemicals sra_attribute.source_name
+                      &lt;character&gt;                       &lt;character&gt;               &lt;character&gt;
+SRR1696208 http://duffel.rail.b..                         ibuprofen    H1 human embryonic s..
+SRR1696209 http://duffel.rail.b..                          glycerol    H1 human embryonic s..
+SRR1696210 http://duffel.rail.b..                          glycerol    H1 human embryonic s..
+SRR1696211 http://duffel.rail.b..                       glucosamine    H1 human embryonic s..
+SRR1696212 http://duffel.rail.b..                       glucosamine    H1 human embryonic s..
+...                           ...                               ...                       ...
+SRR1696326 http://duffel.rail.b..                  propylthiouracil    H1 human embryonic s..
+SRR1696327 http://duffel.rail.b..                 untreated control    H1 human embryonic s..
+SRR1696328 http://duffel.rail.b..                 untreated control    H1 human embryonic s..
+SRR1696329 http://duffel.rail.b..                 untreated control    H1 human embryonic s..
+SRR1696330 http://duffel.rail.b..                 untreated control    H1 human embryonic s..</code></pre>
+
+
+
+
+
+
+<pre class="r"><code>assayNames(rse_gene_SRP050892)</code></pre>
+
+
+<pre><code>[1] &quot;raw_counts&quot;</code></pre>
+
+
+
+
+<pre class="r"><code>assay(rse_gene_SRP050892, &quot;counts&quot;) &lt;- transform_counts(rse_gene_SRP050892)</code></pre>
+
+
+
+
+<pre class="r"><code>raw_data&lt;-assay(rse_gene_SRP050892, &quot;counts&quot;)</code></pre>
+
+
+
+
+
+
+<pre class="r"><code>raw_data&lt;-raw_data[rowSums(raw_data) != 0,]
+</code></pre>
+
+
+
+
+<pre class="r"><code>dim(raw_data)</code></pre>
+
+
+<pre><code>[1] 51972   303</code></pre>
+
+
+
+
+
+
+<pre class="r"><code>#Get GEOIDs from metadata
+GEO_ID&lt;-colData(rse_gene_SRP050892)[, c(&quot;sra.run_alias&quot;                                                     
+ , &quot;sra.run_center_name&quot;                                               
+ )]</code></pre>
+
+
+
+
+
+
+
+
+<pre class="r"><code>GEO_ID&lt;-GEO_ID%&gt;%
+  rename(GEO_Name= sra.run_alias) %&gt;%
+  mutate(GEO_Name = gsub(&quot;_r1&quot;, &quot;&quot;, GEO_Name))</code></pre>
+
+
+<pre><code>Error in UseMethod(&quot;rename&quot;) : 
+  no applicable method for &#39;rename&#39; applied to an object of class &quot;c(&#39;DFrame&#39;, &#39;DataFrame&#39;, &#39;RectangularData&#39;, &#39;SimpleList&#39;, &#39;DataFrame_OR_NULL&#39;, &#39;List&#39;, &#39;Vector&#39;, &#39;list_OR_List&#39;, &#39;Annotated&#39;, &#39;vector_OR_Vector&#39;)&quot;</code></pre>
+
+
+
+
+
+<div>LS0tCnRpdGxlOiAiUmVjb3VudDMgTmVydWFsIENvbnRzdHJ1Y3RzIFN0dWR5IGZvciBNTCIKb3V0cHV0OiBodG1sX25vdGVib29rCi0tLQoKVGhlIGdvYWwgb2YgdGhpcyBzY3JpcHQgaXMgdG8gZG93bmxvYWQgdGhlIHJhdyBjb3VudHMgZm9yIHRoZSBzdHVkeS4gClNSQSBQcm9qZWN0IE51bWJlcjogU1JQMDUwODkyCldpdGggdGhlc2UgY291bnRzLCBJIHdpbGwgY29uZHVjdCBhIGRpZmZlcmVudGlhbCBnZW5lIGV4cHJlc3Npb24gYW5hbHlzaXMgdXNpbmcgREVTZXEyLgoKYGBge3J9CkJpb2NNYW5hZ2VyOjppbnN0YWxsKCJMaWViZXJJbnN0aXR1dGUvcmVjb3VudDMiKQpgYGAKCmBgYHtyfQpsaWJyYXJ5KCJyZWNvdW50MyIpCmBgYAoKCmBgYHtyfQpodW1hbl9wcm9qZWN0cyA8LSBhdmFpbGFibGVfcHJvamVjdHMoKQpgYGAKYGBge3J9CmRpbShodW1hbl9wcm9qZWN0cykKYGBgCmBgYHtyfQojT2J0YWluIHByb2plY3QgaW5mb3JtYXRpb24gd2l0aCB0aGUgU1JBIG51bWJlcgojUHJvamVjdCBoYXMgMzAzIHNhbXBsZXMsIEkgYW0gaW50ZXJlc3RlZCBpbiByb3VnaGx5IDE3MCBzYW1wbGVzCnByb2plY3RfaW5mbyA8LSBzdWJzZXQoCiAgICBodW1hbl9wcm9qZWN0cywKICAgIHByb2plY3QgPT0gIlNSUDA1MDg5MiIgJiBwcm9qZWN0X3R5cGUgPT0gImRhdGFfc291cmNlcyIKKQpwcm9qZWN0X2luZm8KYGBgCgpgYGB7cn0KYW5ub3RhdGlvbl9vcHRpb25zKCJodW1hbiIpCmBgYApgYGB7cn0KcHJvamVjdF9pbmZvWywgYygicHJvamVjdCIsICJvcmdhbmlzbSIsICJwcm9qZWN0X2hvbWUiKV0KYGBgCmBgYHtyfQpyc2VfZ2VuZV9TUlAwNTA4OTIgPC0gY3JlYXRlX3JzZShwcm9qZWN0X2luZm8pCmBgYApgYGB7cn0KcnNlX2dlbmVfU1JQMDUwODkyCmBgYAoKYGBge3J9Cm1ldGFkYXRhX1NSUDA1MDg5MjwtbWV0YWRhdGEocnNlX2dlbmVfU1JQMDUwODkyKQpgYGAKYGBge3J9Cm1ldGFkYXRhX1NSUDA1MDg5MgpgYGAKYGBge3J9CmdyYW5nZXNfb2JqZWN0PC1yb3dSYW5nZXMocnNlX2dlbmVfU1JQMDUwODkyKQpgYGAKYGBge3J9CmdyYW5nZXNfb2JqZWN0CmBgYApgYGB7cn0KZ2VuZWlkPC1ncmFuZ2VzX29iamVjdCRnZW5lX2lkCmBgYAoKYGBge3J9CmdlbmVfbmFtZXM8LWdyYW5nZXNfb2JqZWN0JGdlbmVfbmFtZQpgYGAKCmBgYHtyfQpyZWNvdW50M19jb2xzIDwtIGNvbG5hbWVzKGNvbERhdGEocnNlX2dlbmVfU1JQMDUwODkyKSkKYGBgCmBgYHtyfQpyZWNvdW50M19jb2xzCmBgYAoKCmBgYHtyfQojaGVyZSB3ZSBjYW4gc2VlIHRoZSBpbmZvcm1hdGlvbiBmb3IgYWxsIDMwMyBzYW1wbGVzIApyc2VfZ2VuZV9TUlAwNTA4OTJfZXhwYW5kZWQgPC0KICAgIGV4cGFuZF9zcmFfYXR0cmlidXRlcyhyc2VfZ2VuZV9TUlAwNTA4OTIpCmNvbERhdGEocnNlX2dlbmVfU1JQMDUwODkyX2V4cGFuZGVkKVssIG5jb2woY29sRGF0YShyc2VfZ2VuZV9TUlAwNTA4OTIpKTpuY29sKGNvbERhdGEocnNlX2dlbmVfU1JQMDUwODkyX2V4cGFuZGVkKSldCmBgYAoKYGBge3J9CmFzc2F5TmFtZXMocnNlX2dlbmVfU1JQMDUwODkyKQpgYGAKYGBge3J9CmFzc2F5KHJzZV9nZW5lX1NSUDA1MDg5MiwgImNvdW50cyIpIDwtIHRyYW5zZm9ybV9jb3VudHMocnNlX2dlbmVfU1JQMDUwODkyKQpgYGAKYGBge3J9CnJhd19kYXRhPC1hc3NheShyc2VfZ2VuZV9TUlAwNTA4OTIsICJjb3VudHMiKQpgYGAKCmBgYHtyfQojRGVsZXRlIHJvd3MgdGhhdCBoYXZlIGNvdW50cyBvZiB6ZXJvCnJhd19kYXRhPC1yYXdfZGF0YVtyb3dTdW1zKHJhd19kYXRhKSAhPSAwLF0KCmBgYApgYGB7cn0KI1RoZXJlIGFyZSA1MTk3MiBnZW5lcywgYW5kIDMwMyBjb2x1bW5zCmRpbShyYXdfZGF0YSkKYGBgCgoKCmBgYHtyfQojR2V0IEdFT0lEcyBmcm9tIG1ldGFkYXRhCkdFT19JRDwtY29sRGF0YShyc2VfZ2VuZV9TUlAwNTA4OTIpWywgYygic3JhLnJ1bl9hbGlhcyIgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogLCAic3JhLnJ1bl9jZW50ZXJfbmFtZSIgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogKV0KYGBgCmBgYHtyfQoKYGBgCgpgYGB7cn0KR0VPX0lEPC1HRU9fSUQlPiUKICByZW5hbWUoR0VPX05hbWU9IHNyYS5ydW5fYWxpYXMpICU+JQogIG11dGF0ZShHRU9fTmFtZSA9IGdzdWIoIl9yMSIsICIiLCBHRU9fTmFtZSkpCmBgYAoK</div>
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script type="module" src="https://s.brightspace.com/lib/bsi/20.22.5-185/unbundled/mathjax.js"></script><script type="text/javascript">document.addEventListener('DOMContentLoaded', function() {
+					if (document.querySelector('math') || /\$\$|\\\(|\\\[|\\begin{|\\ref{|\\eqref{/.test(document.body.innerHTML)) {
+						document.querySelectorAll('mspace[linebreak="newline"]').forEach(elm => {
+							elm.setAttribute('style', 'display: block; height: 0.5rem;');
+						});
+
+						window.D2L.MathJax.loadMathJax({
+							'outputScale': 1.3,
+							'renderLatex': true
+						});
+					}
+				});</script></body></html>

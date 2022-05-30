@@ -1,0 +1,1116 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html><head></head><body>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div>
+
+<div class="btn-group pull-right float-right">
+<span>Code</span> <span class="caret"></span>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a rel="noopener" href="#">Show All Code</a></li>
+<li><a rel="noopener" href="#">Hide All Code</a></li>
+<li class="divider"></li>
+<li><a rel="noopener" href="#">Download Rmd</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">RSEM Raw Data DESEQ2 Neurotoxicity Study</h1>
+
+</div>
+
+
+
+<p>The raw data for this study was kindly provided by the authors of the paper:</p>
+<p>Schwartz, M. P., Hou, Z., Propson, N. E., Zhang, J., Engstrom, C. J., Costa, V. S., Jiang, P., Nguyen, B. K., Bolin, J. M., Daly, W., Wang, Y., Stewart, R., Page, C. D., Murphy, W. L., &amp; Thomson, J. A. (2015). Human pluripotent stem cell-derived neural constructs for predicting neural toxicity. Proceedings of the National Academy of Sciences, 112(40), 12516–12521. <a rel="noopener" href="https://doi.org/10.1073/pnas.1516645112" class="uri">https://doi.org/10.1073/pnas.1516645112</a></p>
+<p>The data is Expected Count data processed with RSEM.</p>
+
+
+
+<pre class="r"><code>install.packages(&#39;dendextend&#39;)</code></pre>
+
+
+<pre><code>trying URL &#39;https://cran.rstudio.com/bin/macosx/contrib/4.1/dendextend_1.15.2.tgz&#39;
+Content type &#39;application/x-gzip&#39; length 3885614 bytes (3.7 MB)
+==================================================
+downloaded 3.7 MB</code></pre>
+
+
+<pre><code>
+The downloaded binary packages are in
+    /var/folders/kz/671nytjx6wbb6qvvfpv7jwt00000gn/T//RtmpARyGGd/downloaded_packages</code></pre>
+
+
+
+
+<pre class="r"><code>install.packages(&quot;circlize&quot;)</code></pre>
+
+
+<pre><code>also installing the dependencies ‘GlobalOptions’, ‘shape’
+
+trying URL &#39;https://cran.rstudio.com/bin/macosx/contrib/4.1/GlobalOptions_0.1.2.tgz&#39;
+Content type &#39;application/x-gzip&#39; length 459466 bytes (448 KB)
+==================================================
+downloaded 448 KB
+
+trying URL &#39;https://cran.rstudio.com/bin/macosx/contrib/4.1/shape_1.4.6.tgz&#39;
+Content type &#39;application/x-gzip&#39; length 785275 bytes (766 KB)
+==================================================
+downloaded 766 KB
+
+trying URL &#39;https://cran.rstudio.com/bin/macosx/contrib/4.1/circlize_0.4.14.tgz&#39;
+Content type &#39;application/x-gzip&#39; length 3307025 bytes (3.2 MB)
+==================================================
+downloaded 3.2 MB</code></pre>
+
+
+<pre><code>
+The downloaded binary packages are in
+    /var/folders/kz/671nytjx6wbb6qvvfpv7jwt00000gn/T//RtmpARyGGd/downloaded_packages</code></pre>
+
+
+
+
+
+
+<pre class="r"><code>library(dplyr)
+library(pheatmap)
+library(DESeq2)</code></pre>
+
+
+
+
+<pre class="r"><code>library(dendextend)</code></pre>
+
+
+
+
+<pre class="r"><code>library(ggplot2)</code></pre>
+
+
+
+
+
+
+<pre class="r"><code>RSEM_data=read.csv(&#39;/Users/danielaquijano/Documents/GitHub/Machine-Learning-Course-Projects/Final_Project_Neurotoxicity_Prediction/Final_Project_Files/RSEM_data.csv&#39;)</code></pre>
+
+
+
+<p>The RSEM data is made up of the data 2 and 7 days after chemical exposure.</p>
+
+
+
+<pre class="r"><code>head(RSEM_data)</code></pre>
+
+
+<div>
+
+</div>
+
+
+
+
+<pre class="r"><code>RSEM_day2&lt;-RSEM_data[,1:146]</code></pre>
+
+
+
+
+<pre class="r"><code>RSEM_day2</code></pre>
+
+
+<div>
+
+</div>
+
+
+
+
+
+
+<pre class="r"><code>#Obtain data from day 2
+library(plyr)
+RSEM_day2 &lt;- plyr::rename(RSEM_day2, c(&quot;d2t11a_reprep&quot;=&quot;d2t11a&quot;))</code></pre>
+
+
+
+
+
+
+<pre class="r"><code>RSEM_day2 &lt;- plyr::rename(RSEM_day2, c(&quot;d2t13a_reprep&quot;=&quot;d2t13a&quot;))</code></pre>
+
+
+
+
+
+
+<pre class="r"><code>RSEM_day2&lt;-RSEM_day2[,order(colnames(RSEM_day2))]
+RSEM_day2$Transcript_ID&lt;-NULL
+RSEM_day2</code></pre>
+
+
+<div>
+
+</div>
+
+
+
+
+
+
+<pre class="r"><code>#Obtain data from day 7
+RSEM_day7&lt;-RSEM_data[,147:290]
+RSEM_day7&lt;-RSEM_day7[,order(colnames(RSEM_day7))]
+RSEM_day7[&#39;Gene.ID&#39;]&lt;-RSEM_day2$Gene.ID
+head(RSEM_day7)</code></pre>
+
+
+<div>
+
+</div>
+
+
+<pre class="r"><code>NA
+NA</code></pre>
+
+
+
+<p>Making sure the columns correspond to one another:</p>
+
+
+
+<pre class="r"><code>colnames(RSEM_day7)</code></pre>
+
+
+<pre><code>  [1] &quot;d7b10a&quot;  &quot;d7b10b&quot;  &quot;d7b1a&quot;   &quot;d7b1b&quot;   &quot;d7b2a&quot;   &quot;d7b2b&quot;   &quot;d7b3a&quot;  
+  [8] &quot;d7b3b&quot;   &quot;d7b4a&quot;   &quot;d7b4b&quot;   &quot;d7b5a&quot;   &quot;d7b5b&quot;   &quot;d7b6a&quot;   &quot;d7b6b&quot;  
+ [15] &quot;d7b7a&quot;   &quot;d7b7b&quot;   &quot;d7b8a&quot;   &quot;d7b8b&quot;   &quot;d7b9a&quot;   &quot;d7b9b&quot;   &quot;d7c10a&quot; 
+ [22] &quot;d7c10b&quot;  &quot;d7c11a&quot;  &quot;d7c11b&quot;  &quot;d7c12a&quot;  &quot;d7c12b&quot;  &quot;d7c13a&quot;  &quot;d7c13b&quot; 
+ [29] &quot;d7c14a&quot;  &quot;d7c14b&quot;  &quot;d7c15a&quot;  &quot;d7c15b&quot;  &quot;d7c16a&quot;  &quot;d7c16b&quot;  &quot;d7c17a&quot; 
+ [36] &quot;d7c17b&quot;  &quot;d7c18a&quot;  &quot;d7c18b&quot;  &quot;d7c19a&quot;  &quot;d7c19b&quot;  &quot;d7c1a&quot;   &quot;d7c1b&quot;  
+ [43] &quot;d7c20a&quot;  &quot;d7c20b&quot;  &quot;d7c21a&quot;  &quot;d7c21b&quot;  &quot;d7c22a&quot;  &quot;d7c22b&quot;  &quot;d7c23a&quot; 
+ [50] &quot;d7c23b&quot;  &quot;d7c24a&quot;  &quot;d7c24b&quot;  &quot;d7c25a&quot;  &quot;d7c25b&quot;  &quot;d7c26a&quot;  &quot;d7c26b&quot; 
+ [57] &quot;d7c2a&quot;   &quot;d7c2b&quot;   &quot;d7c3a&quot;   &quot;d7c3b&quot;   &quot;d7c4a&quot;   &quot;d7c4b&quot;   &quot;d7c5a&quot;  
+ [64] &quot;d7c5b&quot;   &quot;d7c6a&quot;   &quot;d7c6b&quot;   &quot;d7c7a&quot;   &quot;d7c7b&quot;   &quot;d7c8a&quot;   &quot;d7c8b&quot;  
+ [71] &quot;d7c9a&quot;   &quot;d7c9b&quot;   &quot;d7t10a&quot;  &quot;d7t10b&quot;  &quot;d7t11a&quot;  &quot;d7t11b&quot;  &quot;d7t12a&quot; 
+ [78] &quot;d7t12b&quot;  &quot;d7t13a&quot;  &quot;d7t13b&quot;  &quot;d7t14a&quot;  &quot;d7t14b&quot;  &quot;d7t15a&quot;  &quot;d7t15b&quot; 
+ [85] &quot;d7t16a&quot;  &quot;d7t16b&quot;  &quot;d7t17a&quot;  &quot;d7t17b&quot;  &quot;d7t18a&quot;  &quot;d7t18b&quot;  &quot;d7t19a&quot; 
+ [92] &quot;d7t19b&quot;  &quot;d7t1a&quot;   &quot;d7t1b&quot;   &quot;d7t20a&quot;  &quot;d7t20b&quot;  &quot;d7t21a&quot;  &quot;d7t21b&quot; 
+ [99] &quot;d7t22a&quot;  &quot;d7t22b&quot;  &quot;d7t23a&quot;  &quot;d7t23b&quot;  &quot;d7t24a&quot;  &quot;d7t24b&quot;  &quot;d7t25a&quot; 
+[106] &quot;d7t25b&quot;  &quot;d7t26a&quot;  &quot;d7t26b&quot;  &quot;d7t27a&quot;  &quot;d7t27b&quot;  &quot;d7t28a&quot;  &quot;d7t28b&quot; 
+[113] &quot;d7t29a&quot;  &quot;d7t29b&quot;  &quot;d7t2a&quot;   &quot;d7t2b&quot;   &quot;d7t30a&quot;  &quot;d7t30b&quot;  &quot;d7t32a&quot; 
+[120] &quot;d7t32b&quot;  &quot;d7t33a&quot;  &quot;d7t33b&quot;  &quot;d7t34a&quot;  &quot;d7t34b&quot;  &quot;d7t35a&quot;  &quot;d7t35b&quot; 
+[127] &quot;d7t3a&quot;   &quot;d7t3b&quot;   &quot;d7t4a&quot;   &quot;d7t4b&quot;   &quot;d7t5a&quot;   &quot;d7t5b&quot;   &quot;d7t6a&quot;  
+[134] &quot;d7t6b&quot;   &quot;d7t7a&quot;   &quot;d7t7b&quot;   &quot;d7t8a&quot;   &quot;d7t8b&quot;   &quot;d7t9a&quot;   &quot;d7t9b&quot;  
+[141] &quot;d7un1a&quot;  &quot;d7un1b&quot;  &quot;d7un2a&quot;  &quot;d7un2b&quot;  &quot;Gene.ID&quot;</code></pre>
+
+
+
+
+<pre class="r"><code>colnames(RSEM_day2)</code></pre>
+
+
+<pre><code>  [1] &quot;d2b10a&quot;  &quot;d2b10b&quot;  &quot;d2b1a&quot;   &quot;d2b1b&quot;   &quot;d2b2a&quot;   &quot;d2b2b&quot;   &quot;d2b3a&quot;  
+  [8] &quot;d2b3b&quot;   &quot;d2b4a&quot;   &quot;d2b4b&quot;   &quot;d2b5a&quot;   &quot;d2b5b&quot;   &quot;d2b6a&quot;   &quot;d2b6b&quot;  
+ [15] &quot;d2b7a&quot;   &quot;d2b7b&quot;   &quot;d2b8a&quot;   &quot;d2b8b&quot;   &quot;d2b9a&quot;   &quot;d2b9b&quot;   &quot;d2c10a&quot; 
+ [22] &quot;d2c10b&quot;  &quot;d2c11a&quot;  &quot;d2c11b&quot;  &quot;d2c12a&quot;  &quot;d2c12b&quot;  &quot;d2c13a&quot;  &quot;d2c13b&quot; 
+ [29] &quot;d2c14a&quot;  &quot;d2c14b&quot;  &quot;d2c15a&quot;  &quot;d2c15b&quot;  &quot;d2c16a&quot;  &quot;d2c16b&quot;  &quot;d2c17a&quot; 
+ [36] &quot;d2c17b&quot;  &quot;d2c18a&quot;  &quot;d2c18b&quot;  &quot;d2c19a&quot;  &quot;d2c19b&quot;  &quot;d2c1a&quot;   &quot;d2c1b&quot;  
+ [43] &quot;d2c20a&quot;  &quot;d2c20b&quot;  &quot;d2c21a&quot;  &quot;d2c21b&quot;  &quot;d2c22a&quot;  &quot;d2c22b&quot;  &quot;d2c23a&quot; 
+ [50] &quot;d2c23b&quot;  &quot;d2c24a&quot;  &quot;d2c24b&quot;  &quot;d2c25a&quot;  &quot;d2c25b&quot;  &quot;d2c26a&quot;  &quot;d2c26b&quot; 
+ [57] &quot;d2c2a&quot;   &quot;d2c2b&quot;   &quot;d2c3a&quot;   &quot;d2c3b&quot;   &quot;d2c4a&quot;   &quot;d2c4b&quot;   &quot;d2c5a&quot;  
+ [64] &quot;d2c5b&quot;   &quot;d2c6a&quot;   &quot;d2c6b&quot;   &quot;d2c7a&quot;   &quot;d2c7b&quot;   &quot;d2c8a&quot;   &quot;d2c8b&quot;  
+ [71] &quot;d2c9a&quot;   &quot;d2c9b&quot;   &quot;d2t10a&quot;  &quot;d2t10b&quot;  &quot;d2t11a&quot;  &quot;d2t11b&quot;  &quot;d2t12a&quot; 
+ [78] &quot;d2t12b&quot;  &quot;d2t13a&quot;  &quot;d2t13b&quot;  &quot;d2t14a&quot;  &quot;d2t14b&quot;  &quot;d2t15a&quot;  &quot;d2t15b&quot; 
+ [85] &quot;d2t16a&quot;  &quot;d2t16b&quot;  &quot;d2t17a&quot;  &quot;d2t17b&quot;  &quot;d2t18a&quot;  &quot;d2t18b&quot;  &quot;d2t19a&quot; 
+ [92] &quot;d2t19b&quot;  &quot;d2t1a&quot;   &quot;d2t1b&quot;   &quot;d2t20a&quot;  &quot;d2t20b&quot;  &quot;d2t21a&quot;  &quot;d2t21b&quot; 
+ [99] &quot;d2t22a&quot;  &quot;d2t22b&quot;  &quot;d2t23a&quot;  &quot;d2t23b&quot;  &quot;d2t24a&quot;  &quot;d2t24b&quot;  &quot;d2t25a&quot; 
+[106] &quot;d2t25b&quot;  &quot;d2t26a&quot;  &quot;d2t26b&quot;  &quot;d2t27a&quot;  &quot;d2t27b&quot;  &quot;d2t28a&quot;  &quot;d2t28b&quot; 
+[113] &quot;d2t29a&quot;  &quot;d2t29b&quot;  &quot;d2t2a&quot;   &quot;d2t2b&quot;   &quot;d2t30a&quot;  &quot;d2t30b&quot;  &quot;d2t32a&quot; 
+[120] &quot;d2t32b&quot;  &quot;d2t33a&quot;  &quot;d2t33b&quot;  &quot;d2t34a&quot;  &quot;d2t34b&quot;  &quot;d2t35a&quot;  &quot;d2t35b&quot; 
+[127] &quot;d2t3a&quot;   &quot;d2t3b&quot;   &quot;d2t4a&quot;   &quot;d2t4b&quot;   &quot;d2t5a&quot;   &quot;d2t5b&quot;   &quot;d2t6a&quot;  
+[134] &quot;d2t6b&quot;   &quot;d2t7a&quot;   &quot;d2t7b&quot;   &quot;d2t8a&quot;   &quot;d2t8b&quot;   &quot;d2t9a&quot;   &quot;d2t9b&quot;  
+[141] &quot;d2un1a&quot;  &quot;d2un1b&quot;  &quot;d2un2a&quot;  &quot;d2un2b&quot;  &quot;Gene.ID&quot;</code></pre>
+
+
+
+<p>The datafrmes are now sorted and now they can be added in order to obtain a dataframe that represents the average gene expression from day 2 and day 7:</p>
+
+
+
+<pre class="r"><code>RSEM_avg&lt;-(RSEM_day2[,1:144]+RSEM_day7[,1:144])/2</code></pre>
+
+
+
+<p>The dataframe below can now be used for exploratory data analysis and differential gene expression analysis.</p>
+
+
+
+<pre class="r"><code>head(RSEM_avg)</code></pre>
+
+
+<div>
+
+</div>
+
+
+
+
+<pre class="r"><code>#Remove last four columns labeled &#39;un&#39;
+RSEM_avg$d2un1a=NULL
+RSEM_avg$d2un1b=NULL
+RSEM_avg$d2un2a=NULL
+RSEM_avg$d2un2b=NULL</code></pre>
+
+
+
+
+
+
+<pre class="r"><code>#set rownames to gene id
+rownames(RSEM_avg)&lt;-RSEM_data$Gene.ID</code></pre>
+
+
+
+
+
+
+<pre class="r"><code>head(RSEM_avg)</code></pre>
+
+
+<div>
+
+</div>
+
+
+
+<p>Save Dataframe to csv file:</p>
+
+
+
+<pre class="r"><code>write.csv(RSEM_avg,&#39;/Users/danielaquijano/Documents/GitHub/Machine-Learning-Course-Projects/Final_Project_Neurotoxicity_Prediction/Final_Project_Files/RSEM_avg.csv&#39;, row.names = FALSE)</code></pre>
+
+
+
+<div class="section level3">
+<h3>Differential Gene Expression Analysis</h3>
+
+
+
+<pre class="r"><code>expgroup&lt;-data.frame()
+condition_toxic&lt;-rep(&#39;Toxic&#39;,68,)
+condition_nontoxic&lt;-rep(&#39;Nontoxic&#39;,72)
+condition&lt;-c(condition_nontoxic,condition_toxic)
+samples&lt;-colnames(RSEM_avg)
+expgroup&lt;-cbind(condition)
+rownames(expgroup)&lt;-samples</code></pre>
+
+
+
+
+
+
+<pre class="r"><code>expgroup</code></pre>
+
+
+<pre><code>       condition 
+d2b10a &quot;Nontoxic&quot;
+d2b10b &quot;Nontoxic&quot;
+d2b1a  &quot;Nontoxic&quot;
+d2b1b  &quot;Nontoxic&quot;
+d2b2a  &quot;Nontoxic&quot;
+d2b2b  &quot;Nontoxic&quot;
+d2b3a  &quot;Nontoxic&quot;
+d2b3b  &quot;Nontoxic&quot;
+d2b4a  &quot;Nontoxic&quot;
+d2b4b  &quot;Nontoxic&quot;
+d2b5a  &quot;Nontoxic&quot;
+d2b5b  &quot;Nontoxic&quot;
+d2b6a  &quot;Nontoxic&quot;
+d2b6b  &quot;Nontoxic&quot;
+d2b7a  &quot;Nontoxic&quot;
+d2b7b  &quot;Nontoxic&quot;
+d2b8a  &quot;Nontoxic&quot;
+d2b8b  &quot;Nontoxic&quot;
+d2b9a  &quot;Nontoxic&quot;
+d2b9b  &quot;Nontoxic&quot;
+d2c10a &quot;Nontoxic&quot;
+d2c10b &quot;Nontoxic&quot;
+d2c11a &quot;Nontoxic&quot;
+d2c11b &quot;Nontoxic&quot;
+d2c12a &quot;Nontoxic&quot;
+d2c12b &quot;Nontoxic&quot;
+d2c13a &quot;Nontoxic&quot;
+d2c13b &quot;Nontoxic&quot;
+d2c14a &quot;Nontoxic&quot;
+d2c14b &quot;Nontoxic&quot;
+d2c15a &quot;Nontoxic&quot;
+d2c15b &quot;Nontoxic&quot;
+d2c16a &quot;Nontoxic&quot;
+d2c16b &quot;Nontoxic&quot;
+d2c17a &quot;Nontoxic&quot;
+d2c17b &quot;Nontoxic&quot;
+d2c18a &quot;Nontoxic&quot;
+d2c18b &quot;Nontoxic&quot;
+d2c19a &quot;Nontoxic&quot;
+d2c19b &quot;Nontoxic&quot;
+d2c1a  &quot;Nontoxic&quot;
+d2c1b  &quot;Nontoxic&quot;
+d2c20a &quot;Nontoxic&quot;
+d2c20b &quot;Nontoxic&quot;
+d2c21a &quot;Nontoxic&quot;
+d2c21b &quot;Nontoxic&quot;
+d2c22a &quot;Nontoxic&quot;
+d2c22b &quot;Nontoxic&quot;
+d2c23a &quot;Nontoxic&quot;
+d2c23b &quot;Nontoxic&quot;
+d2c24a &quot;Nontoxic&quot;
+d2c24b &quot;Nontoxic&quot;
+d2c25a &quot;Nontoxic&quot;
+d2c25b &quot;Nontoxic&quot;
+d2c26a &quot;Nontoxic&quot;
+d2c26b &quot;Nontoxic&quot;
+d2c2a  &quot;Nontoxic&quot;
+d2c2b  &quot;Nontoxic&quot;
+d2c3a  &quot;Nontoxic&quot;
+d2c3b  &quot;Nontoxic&quot;
+d2c4a  &quot;Nontoxic&quot;
+d2c4b  &quot;Nontoxic&quot;
+d2c5a  &quot;Nontoxic&quot;
+d2c5b  &quot;Nontoxic&quot;
+d2c6a  &quot;Nontoxic&quot;
+d2c6b  &quot;Nontoxic&quot;
+d2c7a  &quot;Nontoxic&quot;
+d2c7b  &quot;Nontoxic&quot;
+d2c8a  &quot;Nontoxic&quot;
+d2c8b  &quot;Nontoxic&quot;
+d2c9a  &quot;Nontoxic&quot;
+d2c9b  &quot;Nontoxic&quot;
+d2t10a &quot;Toxic&quot;   
+d2t10b &quot;Toxic&quot;   
+d2t11a &quot;Toxic&quot;   
+d2t11b &quot;Toxic&quot;   
+d2t12a &quot;Toxic&quot;   
+d2t12b &quot;Toxic&quot;   
+d2t13a &quot;Toxic&quot;   
+d2t13b &quot;Toxic&quot;   
+d2t14a &quot;Toxic&quot;   
+d2t14b &quot;Toxic&quot;   
+d2t15a &quot;Toxic&quot;   
+d2t15b &quot;Toxic&quot;   
+d2t16a &quot;Toxic&quot;   
+d2t16b &quot;Toxic&quot;   
+d2t17a &quot;Toxic&quot;   
+d2t17b &quot;Toxic&quot;   
+d2t18a &quot;Toxic&quot;   
+d2t18b &quot;Toxic&quot;   
+d2t19a &quot;Toxic&quot;   
+d2t19b &quot;Toxic&quot;   
+d2t1a  &quot;Toxic&quot;   
+d2t1b  &quot;Toxic&quot;   
+d2t20a &quot;Toxic&quot;   
+d2t20b &quot;Toxic&quot;   
+d2t21a &quot;Toxic&quot;   
+d2t21b &quot;Toxic&quot;   
+d2t22a &quot;Toxic&quot;   
+d2t22b &quot;Toxic&quot;   
+d2t23a &quot;Toxic&quot;   
+d2t23b &quot;Toxic&quot;   
+d2t24a &quot;Toxic&quot;   
+d2t24b &quot;Toxic&quot;   
+d2t25a &quot;Toxic&quot;   
+d2t25b &quot;Toxic&quot;   
+d2t26a &quot;Toxic&quot;   
+d2t26b &quot;Toxic&quot;   
+d2t27a &quot;Toxic&quot;   
+d2t27b &quot;Toxic&quot;   
+d2t28a &quot;Toxic&quot;   
+d2t28b &quot;Toxic&quot;   
+d2t29a &quot;Toxic&quot;   
+d2t29b &quot;Toxic&quot;   
+d2t2a  &quot;Toxic&quot;   
+d2t2b  &quot;Toxic&quot;   
+d2t30a &quot;Toxic&quot;   
+d2t30b &quot;Toxic&quot;   
+d2t32a &quot;Toxic&quot;   
+d2t32b &quot;Toxic&quot;   
+d2t33a &quot;Toxic&quot;   
+d2t33b &quot;Toxic&quot;   
+d2t34a &quot;Toxic&quot;   
+d2t34b &quot;Toxic&quot;   
+d2t35a &quot;Toxic&quot;   
+d2t35b &quot;Toxic&quot;   
+d2t3a  &quot;Toxic&quot;   
+d2t3b  &quot;Toxic&quot;   
+d2t4a  &quot;Toxic&quot;   
+d2t4b  &quot;Toxic&quot;   
+d2t5a  &quot;Toxic&quot;   
+d2t5b  &quot;Toxic&quot;   
+d2t6a  &quot;Toxic&quot;   
+d2t6b  &quot;Toxic&quot;   
+d2t7a  &quot;Toxic&quot;   
+d2t7b  &quot;Toxic&quot;   
+d2t8a  &quot;Toxic&quot;   
+d2t8b  &quot;Toxic&quot;   
+d2t9a  &quot;Toxic&quot;   
+d2t9b  &quot;Toxic&quot;   </code></pre>
+
+
+
+
+<pre class="r"><code>#Round values in count matrix for DESEQ2 input
+RSEM_avg&lt;-round(RSEM_avg,0)</code></pre>
+
+
+
+
+
+
+<pre class="r"><code>dds &lt;-DESeqDataSetFromMatrix(
+  countData=RSEM_avg,
+  colData=expgroup,
+  design=~condition,
+)</code></pre>
+
+
+<pre><code>converting counts to integer mode
+Warning in DESeqDataSet(se, design = design, ignoreRank) :
+  some variables in design formula are characters, converting to factors</code></pre>
+
+
+
+
+<pre class="r"><code>dds</code></pre>
+
+
+<pre><code>class: DESeqDataSet 
+dim: 19084 140 
+metadata(1): version
+assays(1): counts
+rownames(19084): A1BG A1CF ... ZZEF1 ZZZ3
+rowData names(0):
+colnames(140): d2b10a d2b10b ... d2t9a d2t9b
+colData names(1): condition</code></pre>
+
+
+
+
+
+
+<pre class="r"><code>#Remove genes with 10 or less reads
+genes_to_keep &lt;- rowSums(counts(dds)) &gt;= 10
+dds &lt;- dds[genes_to_keep,]</code></pre>
+
+
+
+
+
+
+<pre class="r"><code>#run the DESeq wrapper function. 
+dds &lt;- DESeq(dds)</code></pre>
+
+
+<pre><code>estimating size factors
+estimating dispersions
+gene-wise dispersion estimates
+mean-dispersion relationship
+final dispersion estimates
+fitting model and testing
+-- replacing outliers and refitting for 1085 genes
+-- DESeq argument &#39;minReplicatesForReplace&#39; = 7 
+-- original counts are preserved in counts(dds)
+estimating dispersions
+fitting model and testing</code></pre>
+
+
+<pre class="r"><code>class(dds)</code></pre>
+
+
+<pre><code>[1] &quot;DESeqDataSet&quot;
+attr(,&quot;package&quot;)
+[1] &quot;DESeq2&quot;</code></pre>
+
+
+
+
+
+
+<pre class="r"><code>#Obtain normalized data from Deseq object raw counts
+rawcounts.matrix &lt;- counts(dds,normalized=F)
+normalizedcounts.matrix &lt;- counts(dds,normalized=T)</code></pre>
+
+
+
+
+
+
+<pre class="r"><code># “rlog” transform the normalized counts and perform hierarchical clustering of samples:
+vst_transform &lt;- vst(dds)
+dists &lt;- dist(t(assay(vst_transform)))
+</code></pre>
+
+
+
+
+
+
+<pre class="r"><code>H_Clustering&lt;-(hclust(dists))
+par(cex=0.3, mar=c(5, 8, 4, 1))
+plot(H_Clustering, xlab=&quot;&quot;, ylab=&quot;&quot;, main=&quot;&quot;, sub=&quot;&quot;, axes=FALSE)
+par(cex=1)</code></pre>
+
+
+<pre class="r"><code>title(xlab=&quot;xlab&quot;, ylab=&quot;ylab&quot;, main=&quot;main&quot;)
+axis(2)</code></pre>
+
+
+<p><img src="javascript://"/></p>
+
+
+
+<p>Data clustering exploration with the dendextend package</p>
+
+
+
+<pre class="r"><code># Create a dend:
+dend &lt;- dists %&gt;% hclust %&gt;% as.dendrogram</code></pre>
+
+
+
+
+
+
+<pre class="r"><code>
+dend_test &lt;-dists %&gt;% hclust(method = &quot;average&quot;) %&gt;%  as.dendrogram %&gt;% 
+   set(&quot;branches_lty&quot;, c(1,1,3,1,1,2)) %&gt;%
+   set(&quot;nodes_pch&quot;, 19) %&gt;% set(&quot;nodes_col&quot;, c(&quot;pink&quot;, &quot;purple&quot;, &quot;green&quot;, NA))
+# plot the dend in usual &quot;base&quot; plotting engine:
+par(cex=0.8)
+plot(dend_test)
+title(xlab=&quot;Sample Names&quot;, ylab=&quot;Distance&quot;, main=&quot;Hierarchical Clustering of Samples Exposed to toxic and non-toxic chemicals&quot;)
+</code></pre>
+
+
+<p><img src="javascript://"/></p>
+
+
+
+
+
+
+<pre class="r"><code>library(circlize)
+
+dend &lt;- dists %&gt;% hclust %&gt;% as.dendrogram %&gt;%
+   set(&quot;branches_k_color&quot;, k=3) %&gt;% set(&quot;branches_lwd&quot;, c(5,2,1.5)) %&gt;%
+   set(&quot;branches_lty&quot;, c(1,1,3,1,1,2)) %&gt;%
+   set(&quot;nodes_pch&quot;, 19) %&gt;% set(&quot;nodes_col&quot;, c(&quot;orange&quot;, &quot;black&quot;, &quot;plum&quot;, NA))
+
+par(mar = rep(0,4))
+circlize_dendrogram(dend)</code></pre>
+
+
+<p><img src="javascript://"/></p>
+
+
+
+
+<pre class="r"><code>pcaData&lt;-plotPCA(vst_transform)
+pcaData+geom_label(aes(label = name))+ggtitle(&#39;Principal Component Analysis of RNA Seq Data&#39; )</code></pre>
+
+
+<p><img src="javascript://"/></p>
+
+
+
+
+<pre class="r"><code>res &lt;- results(dds, contrast = c(&#39;condition&#39;,&#39;Nontoxic&#39;,&#39;Toxic&#39;), alpha = 0.05 )</code></pre>
+
+
+
+
+
+
+<pre class="r"><code>plotMA(res, ylim=c(-2,2))</code></pre>
+
+
+<p><img src="javascript://"/></p>
+
+
+
+
+<pre class="r"><code>diffexpgenes&lt;-as.data.frame(subset(res, res[,5] &lt;0.05  &amp; res[,2] &lt; -1 | res[,2] &gt; 1  ))
+sprintf(&#39; The number of significantly expressed genes (p&lt;0.05) and with a log ratio with absolute value above 1 is %s&#39;, nrow(diffexpgenes))</code></pre>
+
+
+<pre><code>[1] &quot; The number of significantly expressed genes (p&lt;0.05) and with a log ratio with absolute value above 1 is 118&quot;</code></pre>
+
+
+
+
+<pre class="r"><code>resOrdered &lt;- res[order(res$pvalue),] 
+head(resOrdered,30) # View the 10 most significant genes</code></pre>
+
+
+<pre><code>log2 fold change (MLE): condition Nontoxic vs Toxic 
+Wald test p-value: condition Nontoxic vs Toxic 
+DataFrame with 30 rows and 6 columns
+         baseMean log2FoldChange     lfcSE      stat      pvalue        padj
+        &lt;numeric&gt;      &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt;   &lt;numeric&gt;   &lt;numeric&gt;
+MT1X      18.6273       -2.93194  0.312200  -9.39122 5.93092e-21 9.40170e-17
+MT2A     111.9069       -2.23805  0.254707  -8.78676 1.53938e-18 1.22011e-14
+MT1E      14.0895       -4.55961  0.601770  -7.57701 3.53618e-14 1.86852e-10
+GDF15     18.9009       -1.43641  0.222463  -6.45688 1.06883e-10 3.88236e-07
+NBL1      14.1159       -1.50216  0.233390  -6.43626 1.22456e-10 3.88236e-07
+...           ...            ...       ...       ...         ...         ...
+HSPA1A   489.7599      -0.507784 0.1059145  -4.79428 1.63259e-06  0.00099538
+SEMA3E    36.6360      -0.639591 0.1342760  -4.76326 1.90492e-06  0.00111840
+RARRES3   13.6169      -0.582819 0.1226590  -4.75154 2.01875e-06  0.00114290
+HSPA1B   726.8664      -0.398059 0.0844874  -4.71147 2.45941e-06  0.00134436
+KLF5      22.7120      -0.457059 0.0975948  -4.68324 2.82380e-06  0.00149210</code></pre>
+
+
+
+
+<pre class="r"><code>norm_counts_top_30=normalizedcounts.matrix[rownames(head(resOrdered,30)), ]</code></pre>
+
+
+
+
+
+
+<pre class="r"><code>head(norm_counts_top_30)</code></pre>
+
+
+
+
+
+
+<pre class="r"><code>#Create a new matrix or dataframe that contains the expression values from normvalues for just the diffexpgenes and call it diffexpvalues.
+diffexp_ID&lt;-rownames(diffexpgenes)
+diffexpvalues&lt;-normalizedcounts.matrix[(diffexp_ID),]</code></pre>
+
+
+
+
+
+
+<pre class="r"><code>diffexpvalues_corr&lt;-cor((diffexpvalues), method=&#39;pearson&#39;)
+diffexpvalues_dist&lt;-as.dist(1-diffexpvalues_corr)
+diffexpvalues_clustering &lt;- hclust(dist(diffexpvalues), method = &quot;average&quot;)</code></pre>
+
+
+
+
+
+
+<pre class="r"><code>dend_test_diff_exp &lt;-diffexpvalues_dist %&gt;% hclust(method = &quot;average&quot;) %&gt;%  as.dendrogram %&gt;% 
+   set(&quot;branches_lty&quot;, c(1,1,3,1,1,2)) %&gt;%
+   set(&quot;nodes_pch&quot;, 19) %&gt;% set(&quot;nodes_col&quot;, c(&quot;pink&quot;, &quot;purple&quot;, &quot;green&quot;, NA))
+# plot the dend in usual &quot;base&quot; plotting engine:
+par(cex=0.8)
+plot(dend_test_diff_exp )
+title(xlab=&quot;Sample Names&quot;, ylab=&quot;Distance&quot;, main=&quot;Hierarchical Clustering of Samples Exposed to toxic and non-toxic chemicals based on Differentially Expressed Genes&quot;)
+</code></pre>
+
+
+<p><img src="javascript://"/></p>
+
+
+
+
+<pre class="r"><code>diffexpvalues_corr_genes&lt;-cor(t(diffexpvalues), method=&#39;pearson&#39;)
+diffexpvalues_dist_genes&lt;-as.dist(1-diffexpvalues_corr_genes)</code></pre>
+
+
+
+
+
+
+<pre class="r"><code>dend_test_diff_exp_genes &lt;-diffexpvalues_dist_genes %&gt;% hclust(method = &quot;average&quot;) %&gt;%  as.dendrogram %&gt;% 
+   set(&quot;branches_lty&quot;, c(1,1,3,1,1,2)) %&gt;%
+   set(&quot;nodes_pch&quot;, 19) %&gt;% set(&quot;nodes_col&quot;, c(&quot;pink&quot;, &quot;purple&quot;, &quot;green&quot;, NA))
+# plot the dend in usual &quot;base&quot; plotting engine:
+par(cex=0.8)
+plot(dend_test_diff_exp_genes )
+title(xlab=&quot;Genes Names&quot;, ylab=&quot;Distance&quot;, main=&quot;Hierarchical Clustering of Differentially Expressed Genes&quot;)
+</code></pre>
+
+
+<p><img src="javascript://"/></p>
+
+
+
+
+<pre class="r"><code>sampleCondition &lt;- c(rep(&#39;Nontoxic&#39;,72),rep(&#39;Toxic&#39;,68))
+sampleTable &lt;- data.frame(sampleName = colnames(norm_counts_top_30),
+                          condition = sampleCondition)</code></pre>
+
+
+
+
+
+
+<pre class="r"><code>sampleTable</code></pre>
+
+
+<div>
+
+</div>
+
+
+
+
+
+
+<pre class="r"><code>annotation_columns=sampleTable</code></pre>
+
+
+
+
+
+
+<pre class="r"><code>row.names(annotation_columns) &lt;- colnames(norm_counts_top_30)</code></pre>
+
+
+
+
+
+
+<pre class="r"><code>annotation_columns$sampleName&lt;-NULL
+annotation_columns</code></pre>
+
+
+<div>
+
+</div>
+
+
+
+
+
+
+<pre class="r"><code>pheatmap(norm_counts_top_30, color=colorRampPalette(c(&quot;white&quot;, &quot;light pink&quot;, &quot;purple&quot;))(30), scale=&quot;row&quot;, cluster_cols = T, show_rownames = T,fontsize_row = 4, fontsize_col = 4,,labels_row = rownames(dists),main=&#39;Differentially Expressed genes with hierarchical clustering&#39;,annotation_col =annotation_columns )</code></pre>
+
+
+<p><img src="javascript://"/></p>
+
+
+
+</div>
+<div class="section level3">
+<h3>GO Term Enrichment</h3>
+
+
+
+<pre class="r"><code>library(org.Hs.eg.db)
+library(DOSE)
+library(pathview)
+library(clusterProfiler)
+library(AnnotationHub)
+library(ensembldb)
+library(tidyverse)</code></pre>
+
+
+
+
+<pre class="r"><code>install.packages(&quot;devtools&quot;)
+devtools::install_github(&quot;stephenturner/annotables&quot;)</code></pre>
+
+
+
+
+
+
+<pre class="r"><code>library(annotables)</code></pre>
+
+
+
+
+
+
+<pre class="r"><code>gene&lt;-rownames(diffexpgenes)</code></pre>
+
+
+
+
+<pre class="r"><code>gene</code></pre>
+
+
+<pre><code>  [1] &quot;ABCA4&quot;      &quot;AFP&quot;        &quot;ALDH1A2&quot;    &quot;ALDH3A1&quot;    &quot;ALOXE3&quot;     &quot;APOBEC3B&quot;  
+  [7] &quot;APOL3&quot;      &quot;ARHGEF15&quot;   &quot;ARSI&quot;       &quot;ASB2&quot;       &quot;BATF2&quot;      &quot;BTLA&quot;      
+ [13] &quot;BTN1A1&quot;     &quot;C10orf90&quot;   &quot;C11orf91&quot;   &quot;C19orf38&quot;   &quot;C3orf45&quot;    &quot;C9&quot;        
+ [19] &quot;C9orf135&quot;   &quot;CASQ2&quot;      &quot;CCIN&quot;       &quot;CCR7&quot;       &quot;CD300LB&quot;    &quot;CHI3L2&quot;    
+ [25] &quot;CKM&quot;        &quot;CLCA2&quot;      &quot;CLDN11&quot;     &quot;CLEC17A&quot;    &quot;CLPS&quot;       &quot;CRB3&quot;      
+ [31] &quot;CRYAA&quot;      &quot;CRYBA4&quot;     &quot;CRYBB1&quot;     &quot;CXCL10&quot;     &quot;DDO&quot;        &quot;DGKG&quot;      
+ [37] &quot;DLX2&quot;       &quot;DNAH17&quot;     &quot;DNAH3&quot;      &quot;EBI3&quot;       &quot;ELF3&quot;       &quot;FABP4&quot;     
+ [43] &quot;FAIM3&quot;      &quot;FAM124B&quot;    &quot;FAM209B&quot;    &quot;FAM71F1&quot;    &quot;FAM83G&quot;     &quot;FITM1&quot;     
+ [49] &quot;FOSB&quot;       &quot;FOSL1&quot;      &quot;FOXD4L1&quot;    &quot;FOXD4L6&quot;    &quot;FSD2&quot;       &quot;GALR2&quot;     
+ [55] &quot;GDF15&quot;      &quot;GLDN&quot;       &quot;HABP2&quot;      &quot;HHIPL2&quot;     &quot;HIST1H1E&quot;   &quot;HIST1H3E&quot;  
+ [61] &quot;HOXA4&quot;      &quot;HOXC4&quot;      &quot;HSPA6&quot;      &quot;IBSP&quot;       &quot;IGFN1&quot;      &quot;IP6K3&quot;     
+ [67] &quot;IRS4&quot;       &quot;ITIH1&quot;      &quot;KCNK5&quot;      &quot;KLHL33&quot;     &quot;LOC283710&quot;  &quot;LRRC8E&quot;    
+ [73] &quot;LY6K&quot;       &quot;MAFA&quot;       &quot;MCART2&quot;     &quot;MMP10&quot;      &quot;MT1E&quot;       &quot;MT1F&quot;      
+ [79] &quot;MT1X&quot;       &quot;MT2A&quot;       &quot;MX2&quot;        &quot;MYBPC2&quot;     &quot;MYEOV&quot;      &quot;MYH8&quot;      
+ [85] &quot;MYO1A&quot;      &quot;NBL1&quot;       &quot;NKX3-1&quot;     &quot;NLRP9&quot;      &quot;NR0B1&quot;      &quot;NRAP&quot;      
+ [91] &quot;OLR1&quot;       &quot;OR1F1&quot;      &quot;PAX8&quot;       &quot;PCK1&quot;       &quot;PLIN4&quot;      &quot;PP2D1&quot;     
+ [97] &quot;RAD21L1&quot;    &quot;RAMP1&quot;      &quot;RFPL4B&quot;     &quot;SERPINA3&quot;   &quot;SERPINE3&quot;   &quot;SLAMF9&quot;    
+[103] &quot;SLC25A31&quot;   &quot;SLC2A9&quot;     &quot;SLC6A13&quot;    &quot;SLCO2A1&quot;    &quot;ST20-MTHFS&quot; &quot;ST8SIA6&quot;   
+[109] &quot;TDO2&quot;       &quot;TM4SF19&quot;    &quot;TMPRSS11F&quot;  &quot;TMPRSS9&quot;    &quot;TNFRSF8&quot;    &quot;TPO&quot;       
+[115] &quot;TSPYL6&quot;     &quot;UBTFL1&quot;     &quot;VGLL2&quot;      &quot;VIPR1&quot;     </code></pre>
+
+
+
+</div>
+<div class="section level3">
+<h3>Export dataframe of differentially expressed genes to csv file.</h3>
+<p>Filter the matrix of normalized gene counts using the gene names of the 118 differentially expressed genes (filtered by log fold change and pvalue)</p>
+
+
+
+<pre class="r"><code>nrow(diffexpgenes)</code></pre>
+
+
+<pre><code>[1] 118</code></pre>
+
+
+
+
+<pre class="r"><code>head(diffexpgenes)</code></pre>
+
+
+<div>
+
+</div>
+
+
+
+
+<pre class="r"><code>rows_to_select&lt;-rownames(diffexpgenes)</code></pre>
+
+
+
+
+
+
+<pre class="r"><code>norm_counts_diffexpgenes&lt;-normalizedcounts.matrix[rows_to_select, ]</code></pre>
+
+
+
+
+<pre class="r"><code>nrow(norm_counts_diffexpgenes)</code></pre>
+
+
+<pre><code>[1] 118</code></pre>
+
+
+
+
+<pre class="r"><code>norm_counts_diffexpgenes&lt;-normalizedcounts.matrix[rows_to_select,]</code></pre>
+
+
+
+
+<pre class="r"><code>length(norm_counts_diffexpgenes)</code></pre>
+
+
+<pre><code>[1] 16520</code></pre>
+
+
+
+
+
+
+<pre class="r"><code>write.csv(norm_counts_diffexpgenes,&#39;/Users/danielaquijano/Documents/GitHub/Machine-Learning-Course-Projects/Final_Project_Neurotoxicity_Prediction/Final_Project_Files/RSEM_diff_exp_genes.csv&#39;, row.names = TRUE)</code></pre>
+
+
+
+
+
+
+<pre class="r"><code>hs &lt;- org.Hs.eg.db
+my.symbols &lt;- gene
+GENEID_ENTREZ&lt;-select(hs, 
+       keys = my.symbols,
+       columns = c(&quot;ENTREZID&quot;, &quot;SYMBOL&quot;),
+       keytype = &quot;SYMBOL&quot;)</code></pre>
+
+
+<pre><code>&#39;select()&#39; returned 1:1 mapping between keys and columns</code></pre>
+
+
+<pre class="r"><code>GENEID_ENTREZ</code></pre>
+
+
+<div>
+
+</div>
+
+
+
+
+
+
+<pre class="r"><code>#Convert the names of all genes tested in the experiment to entrez id
+all_gene&lt;-rownames(RSEM_avg)
+my.symbols_2 &lt;- all_gene
+GENEID_ENTREZ_2&lt;-select(hs, 
+       keys = my.symbols_2 ,
+       columns = c(&quot;ENTREZID&quot;, &quot;SYMBOL&quot;),
+       keytype = &quot;SYMBOL&quot;)</code></pre>
+
+
+<pre><code>&#39;select()&#39; returned 1:many mapping between keys and columns</code></pre>
+
+
+<pre class="r"><code>GENEID_ENTREZ_2</code></pre>
+
+
+<div>
+
+</div>
+
+
+
+
+
+
+<pre class="r"><code>ggo &lt;- groupGO(gene     = GENEID_ENTREZ$ENTREZID,
+               OrgDb    = org.Hs.eg.db,
+               ont      = &quot;BP&quot;,
+               level    = 5,
+               readable = TRUE)
+</code></pre>
+
+
+
+
+
+
+<pre class="r"><code>head(ggo)</code></pre>
+
+
+<div>
+
+</div>
+
+
+
+
+
+
+<pre class="r"><code>ego &lt;- enrichGO(gene          = GENEID_ENTREZ$ENTREZID,
+                universe      = GENEID_ENTREZ_2$ENTREZID,
+                OrgDb         = org.Hs.eg.db,
+                ont           = &quot;ALL&quot;,
+                pAdjustMethod = &quot;BH&quot;,
+                pvalueCutoff  = 0.05,)
+head(ego)</code></pre>
+
+
+<div>
+
+</div>
+
+
+
+
+</div>
+
+<div>LS0tCnRpdGxlOiAiUlNFTSBSYXcgRGF0YSBERVNFUTIgTmV1cm90b3hpY2l0eSBTdHVkeSIKb3V0cHV0OiBodG1sX25vdGVib29rCi0tLQoKVGhlIHJhdyBkYXRhIGZvciB0aGlzIHN0dWR5IHdhcyBraW5kbHkgcHJvdmlkZWQgYnkgdGhlIGF1dGhvcnMgb2YgdGhlIHBhcGVyOgoKU2Nod2FydHosIE0uIFAuLCBIb3UsIFouLCBQcm9wc29uLCBOLiBFLiwgWmhhbmcsIEouLCBFbmdzdHJvbSwgQy4gSi4sIENvc3RhLCBWLiBTLiwgSmlhbmcsIFAuLCBOZ3V5ZW4sIEIuIEsuLCBCb2xpbiwgSi4gTS4sIERhbHksIFcuLCBXYW5nLCBZLiwgU3Rld2FydCwgUi4sIFBhZ2UsIEMuIEQuLCBNdXJwaHksIFcuIEwuLCAmIFRob21zb24sIEouIEEuICgyMDE1KS4gSHVtYW4gcGx1cmlwb3RlbnQgc3RlbSBjZWxsLWRlcml2ZWQgbmV1cmFsIGNvbnN0cnVjdHMgZm9yIHByZWRpY3RpbmcgbmV1cmFsIHRveGljaXR5LiBQcm9jZWVkaW5ncyBvZiB0aGUgTmF0aW9uYWwgQWNhZGVteSBvZiBTY2llbmNlcywgMTEyKDQwKSwgMTI1MTbigJMxMjUyMS4gaHR0cHM6Ly9kb2kub3JnLzEwLjEwNzMvcG5hcy4xNTE2NjQ1MTEyIAoKVGhlIGRhdGEgaXMgRXhwZWN0ZWQgQ291bnQgZGF0YSBwcm9jZXNzZWQgd2l0aCBSU0VNLgoKYGBge3J9Cmluc3RhbGwucGFja2FnZXMoJ2RlbmRleHRlbmQnKQpgYGAKYGBge3J9Cmluc3RhbGwucGFja2FnZXMoImNpcmNsaXplIikKYGBgCgoKYGBge3J9CmxpYnJhcnkoZHBseXIpCmxpYnJhcnkocGhlYXRtYXApCmxpYnJhcnkoREVTZXEyKQpgYGAKYGBge3J9CmxpYnJhcnkoZGVuZGV4dGVuZCkKYGBgCmBgYHtyfQpsaWJyYXJ5KGdncGxvdDIpCmBgYAoKCmBgYHtyfQpSU0VNX2RhdGE9cmVhZC5jc3YoJy9Vc2Vycy9kYW5pZWxhcXVpamFuby9Eb2N1bWVudHMvR2l0SHViL01hY2hpbmUtTGVhcm5pbmctQ291cnNlLVByb2plY3RzL0ZpbmFsX1Byb2plY3RfTmV1cm90b3hpY2l0eV9QcmVkaWN0aW9uL0ZpbmFsX1Byb2plY3RfRmlsZXMvUlNFTV9kYXRhLmNzdicpCmBgYAoKVGhlIFJTRU0gZGF0YSBpcyBtYWRlIHVwIG9mIHRoZSBkYXRhIDIgYW5kIDcgZGF5cyBhZnRlciBjaGVtaWNhbCBleHBvc3VyZS4KYGBge3J9CmhlYWQoUlNFTV9kYXRhKQpgYGAKYGBge3J9ClJTRU1fZGF5MjwtUlNFTV9kYXRhWywxOjE0Nl0KYGBgCmBgYHtyfQpSU0VNX2RheTIKYGBgCgoKYGBge3J9CiNPYnRhaW4gZGF0YSBmcm9tIGRheSAyCmxpYnJhcnkocGx5cikKUlNFTV9kYXkyIDwtIHBseXI6OnJlbmFtZShSU0VNX2RheTIsIGMoImQydDExYV9yZXByZXAiPSJkMnQxMWEiKSkKYGBgCgpgYGB7cn0KUlNFTV9kYXkyIDwtIHBseXI6OnJlbmFtZShSU0VNX2RheTIsIGMoImQydDEzYV9yZXByZXAiPSJkMnQxM2EiKSkKYGBgCgpgYGB7cn0KUlNFTV9kYXkyPC1SU0VNX2RheTJbLG9yZGVyKGNvbG5hbWVzKFJTRU1fZGF5MikpXQpSU0VNX2RheTIkVHJhbnNjcmlwdF9JRDwtTlVMTApSU0VNX2RheTIKYGBgCgoKYGBge3J9CiNPYnRhaW4gZGF0YSBmcm9tIGRheSA3ClJTRU1fZGF5NzwtUlNFTV9kYXRhWywxNDc6MjkwXQpSU0VNX2RheTc8LVJTRU1fZGF5N1ssb3JkZXIoY29sbmFtZXMoUlNFTV9kYXk3KSldClJTRU1fZGF5N1snR2VuZS5JRCddPC1SU0VNX2RheTIkR2VuZS5JRApoZWFkKFJTRU1fZGF5NykKCgpgYGAKCk1ha2luZyBzdXJlIHRoZSBjb2x1bW5zIGNvcnJlc3BvbmQgdG8gb25lIGFub3RoZXI6CmBgYHtyfQpjb2xuYW1lcyhSU0VNX2RheTcpCmBgYApgYGB7cn0KY29sbmFtZXMoUlNFTV9kYXkyKQpgYGAKVGhlIGRhdGFmcm1lcyBhcmUgbm93IHNvcnRlZCBhbmQgbm93IHRoZXkgY2FuIGJlIGFkZGVkIGluIG9yZGVyIHRvIG9idGFpbiBhIGRhdGFmcmFtZSB0aGF0IHJlcHJlc2VudHMgdGhlIGF2ZXJhZ2UgZ2VuZSBleHByZXNzaW9uIGZyb20gZGF5IDIgYW5kIGRheSA3OgpgYGB7cn0KUlNFTV9hdmc8LShSU0VNX2RheTJbLDE6MTQ0XStSU0VNX2RheTdbLDE6MTQ0XSkvMgpgYGAKClRoZSBkYXRhZnJhbWUgYmVsb3cgY2FuIG5vdyBiZSB1c2VkIGZvciBleHBsb3JhdG9yeSBkYXRhIGFuYWx5c2lzIGFuZCBkaWZmZXJlbnRpYWwgZ2VuZSBleHByZXNzaW9uIGFuYWx5c2lzLiAKYGBge3J9CmhlYWQoUlNFTV9hdmcpCmBgYApgYGB7cn0KI1JlbW92ZSBsYXN0IGZvdXIgY29sdW1ucyBsYWJlbGVkICd1bicKUlNFTV9hdmckZDJ1bjFhPU5VTEwKUlNFTV9hdmckZDJ1bjFiPU5VTEwKUlNFTV9hdmckZDJ1bjJhPU5VTEwKUlNFTV9hdmckZDJ1bjJiPU5VTEwKYGBgCgpgYGB7cn0KI3NldCByb3duYW1lcyB0byBnZW5lIGlkCnJvd25hbWVzKFJTRU1fYXZnKTwtUlNFTV9kYXRhJEdlbmUuSUQKYGBgCgpgYGB7cn0KaGVhZChSU0VNX2F2ZykKYGBgCgoKU2F2ZSBEYXRhZnJhbWUgdG8gY3N2IGZpbGU6CmBgYHtyfQp3cml0ZS5jc3YoUlNFTV9hdmcsJy9Vc2Vycy9kYW5pZWxhcXVpamFuby9Eb2N1bWVudHMvR2l0SHViL01hY2hpbmUtTGVhcm5pbmctQ291cnNlLVByb2plY3RzL0ZpbmFsX1Byb2plY3RfTmV1cm90b3hpY2l0eV9QcmVkaWN0aW9uL0ZpbmFsX1Byb2plY3RfRmlsZXMvUlNFTV9hdmcuY3N2Jywgcm93Lm5hbWVzID0gRkFMU0UpCmBgYAoKIyMjIERpZmZlcmVudGlhbCBHZW5lIEV4cHJlc3Npb24gQW5hbHlzaXMKYGBge3J9CmV4cGdyb3VwPC1kYXRhLmZyYW1lKCkKY29uZGl0aW9uX3RveGljPC1yZXAoJ1RveGljJyw2OCwpCmNvbmRpdGlvbl9ub250b3hpYzwtcmVwKCdOb250b3hpYycsNzIpCmNvbmRpdGlvbjwtYyhjb25kaXRpb25fbm9udG94aWMsY29uZGl0aW9uX3RveGljKQpzYW1wbGVzPC1jb2xuYW1lcyhSU0VNX2F2ZykKZXhwZ3JvdXA8LWNiaW5kKGNvbmRpdGlvbikKcm93bmFtZXMoZXhwZ3JvdXApPC1zYW1wbGVzCmBgYAoKYGBge3J9CmV4cGdyb3VwCmBgYApgYGB7cn0KI1JvdW5kIHZhbHVlcyBpbiBjb3VudCBtYXRyaXggZm9yIERFU0VRMiBpbnB1dApSU0VNX2F2Zzwtcm91bmQoUlNFTV9hdmcsMCkKYGBgCgoKYGBge3J9CmRkcyA8LURFU2VxRGF0YVNldEZyb21NYXRyaXgoCiAgY291bnREYXRhPVJTRU1fYXZnLAogIGNvbERhdGE9ZXhwZ3JvdXAsCiAgZGVzaWduPX5jb25kaXRpb24sCikKYGBgCmBgYHtyfQpkZHMKYGBgCgoKYGBge3J9CiNSZW1vdmUgZ2VuZXMgd2l0aCAxMCBvciBsZXNzIHJlYWRzCmdlbmVzX3RvX2tlZXAgPC0gcm93U3Vtcyhjb3VudHMoZGRzKSkgPj0gMTAKZGRzIDwtIGRkc1tnZW5lc190b19rZWVwLF0KYGBgCgpgYGB7cn0KI3J1biB0aGUgREVTZXEgd3JhcHBlciBmdW5jdGlvbi4gCmRkcyA8LSBERVNlcShkZHMpCmNsYXNzKGRkcykKYGBgCgpgYGB7cn0KI09idGFpbiBub3JtYWxpemVkIGRhdGEgZnJvbSBEZXNlcSBvYmplY3QgcmF3IGNvdW50cwpyYXdjb3VudHMubWF0cml4IDwtIGNvdW50cyhkZHMsbm9ybWFsaXplZD1GKQpub3JtYWxpemVkY291bnRzLm1hdHJpeCA8LSBjb3VudHMoZGRzLG5vcm1hbGl6ZWQ9VCkKYGBgCgpgYGB7cn0KIyDigJxybG9n4oCdIHRyYW5zZm9ybSB0aGUgbm9ybWFsaXplZCBjb3VudHMgYW5kIHBlcmZvcm0gaGllcmFyY2hpY2FsIGNsdXN0ZXJpbmcgb2Ygc2FtcGxlczoKdnN0X3RyYW5zZm9ybSA8LSB2c3QoZGRzKQpkaXN0cyA8LSBkaXN0KHQoYXNzYXkodnN0X3RyYW5zZm9ybSkpKQoKYGBgCgpgYGB7ciBvdXQud2lkdGg9IjEwMCUifQpIX0NsdXN0ZXJpbmc8LShoY2x1c3QoZGlzdHMpKQpwYXIoY2V4PTAuMywgbWFyPWMoNSwgOCwgNCwgMSkpCnBsb3QoSF9DbHVzdGVyaW5nLCB4bGFiPSIiLCB5bGFiPSIiLCBtYWluPSIiLCBzdWI9IiIsIGF4ZXM9RkFMU0UpCnBhcihjZXg9MSkKdGl0bGUoeGxhYj0ieGxhYiIsIHlsYWI9InlsYWIiLCBtYWluPSJtYWluIikKYXhpcygyKQpgYGAKCkRhdGEgY2x1c3RlcmluZyBleHBsb3JhdGlvbiB3aXRoIHRoZSBkZW5kZXh0ZW5kIHBhY2thZ2UKYGBge3J9CiMgQ3JlYXRlIGEgZGVuZDoKZGVuZCA8LSBkaXN0cyAlPiUgaGNsdXN0ICU+JSBhcy5kZW5kcm9ncmFtCmBgYAoKCmBgYHtyfQoKZGVuZF90ZXN0IDwtZGlzdHMgJT4lIGhjbHVzdChtZXRob2QgPSAiYXZlcmFnZSIpICU+JSAgYXMuZGVuZHJvZ3JhbSAlPiUgCiAgIHNldCgiYnJhbmNoZXNfbHR5IiwgYygxLDEsMywxLDEsMikpICU+JQogICBzZXQoIm5vZGVzX3BjaCIsIDE5KSAlPiUgc2V0KCJub2Rlc19jb2wiLCBjKCJwaW5rIiwgInB1cnBsZSIsICJncmVlbiIsIE5BKSkKIyBwbG90IHRoZSBkZW5kIGluIHVzdWFsICJiYXNlIiBwbG90dGluZyBlbmdpbmU6CnBhcihjZXg9MC44KQpwbG90KGRlbmRfdGVzdCkKdGl0bGUoeGxhYj0iU2FtcGxlIE5hbWVzIiwgeWxhYj0iRGlzdGFuY2UiLCBtYWluPSJIaWVyYXJjaGljYWwgQ2x1c3RlcmluZyBvZiBTYW1wbGVzIEV4cG9zZWQgdG8gdG94aWMgYW5kIG5vbi10b3hpYyBjaGVtaWNhbHMiKQoKYGBgCgoKYGBge3J9CmxpYnJhcnkoY2lyY2xpemUpCgpkZW5kIDwtIGRpc3RzICU+JSBoY2x1c3QgJT4lIGFzLmRlbmRyb2dyYW0gJT4lCiAgIHNldCgiYnJhbmNoZXNfa19jb2xvciIsIGs9MykgJT4lIHNldCgiYnJhbmNoZXNfbHdkIiwgYyg1LDIsMS41KSkgJT4lCiAgIHNldCgiYnJhbmNoZXNfbHR5IiwgYygxLDEsMywxLDEsMikpICU+JQogICBzZXQoIm5vZGVzX3BjaCIsIDE5KSAlPiUgc2V0KCJub2Rlc19jb2wiLCBjKCJvcmFuZ2UiLCAiYmxhY2siLCAicGx1bSIsIE5BKSkKCnBhcihtYXIgPSByZXAoMCw0KSkKY2lyY2xpemVfZGVuZHJvZ3JhbShkZW5kKQpgYGAKYGBge3J9CnBjYURhdGE8LXBsb3RQQ0EodnN0X3RyYW5zZm9ybSkKcGNhRGF0YStnZW9tX2xhYmVsKGFlcyhsYWJlbCA9IG5hbWUpKStnZ3RpdGxlKCdQcmluY2lwYWwgQ29tcG9uZW50IEFuYWx5c2lzIG9mIFJOQSBTZXEgRGF0YScgKQpgYGAKYGBge3J9CnJlcyA8LSByZXN1bHRzKGRkcywgY29udHJhc3QgPSBjKCdjb25kaXRpb24nLCdOb250b3hpYycsJ1RveGljJyksIGFscGhhID0gMC4wNSApCmBgYAoKYGBge3J9CnBsb3RNQShyZXMsIHlsaW09YygtMiwyKSkKYGBgCmBgYHtyfQpkaWZmZXhwZ2VuZXM8LWFzLmRhdGEuZnJhbWUoc3Vic2V0KHJlcywgcmVzWyw1XSA8MC4wNSAgJiByZXNbLDJdIDwgLTEgfCByZXNbLDJdID4gMSAgKSkKc3ByaW50ZignIFRoZSBudW1iZXIgb2Ygc2lnbmlmaWNhbnRseSBleHByZXNzZWQgZ2VuZXMgKHA8MC4wNSkgYW5kIHdpdGggYSBsb2cgcmF0aW8gd2l0aCBhYnNvbHV0ZSB2YWx1ZSBhYm92ZSAxIGlzICVzJywgbnJvdyhkaWZmZXhwZ2VuZXMpKQpgYGAKYGBge3J9CnJlc09yZGVyZWQgPC0gcmVzW29yZGVyKHJlcyRwdmFsdWUpLF0gCmhlYWQocmVzT3JkZXJlZCwzMCkgIyBWaWV3IHRoZSAxMCBtb3N0IHNpZ25pZmljYW50IGdlbmVzCmBgYApgYGB7cn0Kbm9ybV9jb3VudHNfdG9wXzMwPW5vcm1hbGl6ZWRjb3VudHMubWF0cml4W3Jvd25hbWVzKGhlYWQocmVzT3JkZXJlZCwzMCkpLCBdCmBgYAoKYGBge3J9CmhlYWQobm9ybV9jb3VudHNfdG9wXzMwKQpgYGAKCmBgYHtyfQojQ3JlYXRlIGEgbmV3IG1hdHJpeCBvciBkYXRhZnJhbWUgdGhhdCBjb250YWlucyB0aGUgZXhwcmVzc2lvbiB2YWx1ZXMgZnJvbSBub3JtdmFsdWVzIGZvciBqdXN0IHRoZSBkaWZmZXhwZ2VuZXMgYW5kIGNhbGwgaXQgZGlmZmV4cHZhbHVlcy4KZGlmZmV4cF9JRDwtcm93bmFtZXMoZGlmZmV4cGdlbmVzKQpkaWZmZXhwdmFsdWVzPC1ub3JtYWxpemVkY291bnRzLm1hdHJpeFsoZGlmZmV4cF9JRCksXQpgYGAKCmBgYHtyfQoKZGlmZmV4cHZhbHVlc19jb3JyPC1jb3IoKGRpZmZleHB2YWx1ZXMpLCBtZXRob2Q9J3BlYXJzb24nKQpkaWZmZXhwdmFsdWVzX2Rpc3Q8LWRpc3QoMS1kaWZmZXhwdmFsdWVzX2NvcnIpCmBgYAoKYGBge3J9CmRlbmRfdGVzdF9kaWZmX2V4cCA8LWRpZmZleHB2YWx1ZXNfZGlzdCAlPiUgaGNsdXN0KG1ldGhvZCA9ICJhdmVyYWdlIikgJT4lICBhcy5kZW5kcm9ncmFtICU+JSAKICAgc2V0KCJicmFuY2hlc19sdHkiLCBjKDEsMSwzLDEsMSwyKSkgJT4lCiAgIHNldCgibm9kZXNfcGNoIiwgMTkpICU+JSBzZXQoIm5vZGVzX2NvbCIsIGMoInBpbmsiLCAicHVycGxlIiwgImdyZWVuIiwgTkEpKQojIHBsb3QgdGhlIGRlbmQgaW4gdXN1YWwgImJhc2UiIHBsb3R0aW5nIGVuZ2luZToKcGFyKGNleD0wLjgpCnBsb3QoZGVuZF90ZXN0X2RpZmZfZXhwICkKdGl0bGUoeGxhYj0iU2FtcGxlIE5hbWVzIiwgeWxhYj0iRGlzdGFuY2UiLCBtYWluPSJIaWVyYXJjaGljYWwgQ2x1c3RlcmluZyBvZiBTYW1wbGVzIEV4cG9zZWQgdG8gdG94aWMgYW5kIG5vbi10b3hpYyBjaGVtaWNhbHMgYmFzZWQgb24gRGlmZmVyZW50aWFsbHkgRXhwcmVzc2VkIEdlbmVzIikKCmBgYApgYGB7cn0KZGlmZmV4cHZhbHVlc19jb3JyX2dlbmVzPC1jb3IodChkaWZmZXhwdmFsdWVzKSwgbWV0aG9kPSdwZWFyc29uJykKZGlmZmV4cHZhbHVlc19kaXN0X2dlbmVzPC1hcy5kaXN0KDEtZGlmZmV4cHZhbHVlc19jb3JyX2dlbmVzKQpgYGAKCmBgYHtyfQpkZW5kX3Rlc3RfZGlmZl9leHBfZ2VuZXMgPC1kaWZmZXhwdmFsdWVzX2Rpc3RfZ2VuZXMgJT4lIGhjbHVzdChtZXRob2QgPSAiYXZlcmFnZSIpICU+JSAgYXMuZGVuZHJvZ3JhbSAlPiUgCiAgIHNldCgiYnJhbmNoZXNfbHR5IiwgYygxLDEsMywxLDEsMikpICU+JQogICBzZXQoIm5vZGVzX3BjaCIsIDE5KSAlPiUgc2V0KCJub2Rlc19jb2wiLCBjKCJwaW5rIiwgInB1cnBsZSIsICJncmVlbiIsIE5BKSkKIyBwbG90IHRoZSBkZW5kIGluIHVzdWFsICJiYXNlIiBwbG90dGluZyBlbmdpbmU6CnBhcihjZXg9MC44KQpwbG90KGRlbmRfdGVzdF9kaWZmX2V4cF9nZW5lcyApCnRpdGxlKHhsYWI9IkdlbmVzIE5hbWVzIiwgeWxhYj0iRGlzdGFuY2UiLCBtYWluPSJIaWVyYXJjaGljYWwgQ2x1c3RlcmluZyBvZiBEaWZmZXJlbnRpYWxseSBFeHByZXNzZWQgR2VuZXMiKQoKYGBgCmBgYHtyfQpzYW1wbGVDb25kaXRpb24gPC0gYyhyZXAoJ05vbnRveGljJyw3MikscmVwKCdUb3hpYycsNjgpKQpzYW1wbGVUYWJsZSA8LSBkYXRhLmZyYW1lKHNhbXBsZU5hbWUgPSBjb2xuYW1lcyhub3JtX2NvdW50c190b3BfMzApLAogICAgICAgICAgICAgICAgICAgICAgICAgIGNvbmRpdGlvbiA9IHNhbXBsZUNvbmRpdGlvbikKYGBgCgpgYGB7cn0Kc2FtcGxlVGFibGUKYGBgCgpgYGB7cn0KYW5ub3RhdGlvbl9jb2x1bW5zPXNhbXBsZVRhYmxlCmBgYAoKYGBge3J9CnJvdy5uYW1lcyhhbm5vdGF0aW9uX2NvbHVtbnMpIDwtIGNvbG5hbWVzKG5vcm1fY291bnRzX3RvcF8zMCkKYGBgCgoKYGBge3J9CmFubm90YXRpb25fY29sdW1ucyRzYW1wbGVOYW1lPC1OVUxMCmFubm90YXRpb25fY29sdW1ucwpgYGAKCgoKYGBge3J9CnBoZWF0bWFwKG5vcm1fY291bnRzX3RvcF8zMCwgY29sb3I9Y29sb3JSYW1wUGFsZXR0ZShjKCJ3aGl0ZSIsICJsaWdodCBwaW5rIiwgInB1cnBsZSIpKSgzMCksIHNjYWxlPSJyb3ciLCBjbHVzdGVyX2NvbHMgPSBULCBzaG93X3Jvd25hbWVzID0gVCxmb250c2l6ZV9yb3cgPSA0LCBmb250c2l6ZV9jb2wgPSA0LCxsYWJlbHNfcm93ID0gcm93bmFtZXMoZGlzdHMpLG1haW49J0RpZmZlcmVudGlhbGx5IEV4cHJlc3NlZCBnZW5lcyB3aXRoIGhpZXJhcmNoaWNhbCBjbHVzdGVyaW5nJyxhbm5vdGF0aW9uX2NvbCA9YW5ub3RhdGlvbl9jb2x1bW5zICkKYGBgCgojIyMgR08gVGVybSBFbnJpY2htZW50CgpgYGB7cn0KbGlicmFyeShvcmcuSHMuZWcuZGIpCmxpYnJhcnkoRE9TRSkKbGlicmFyeShwYXRodmlldykKbGlicmFyeShjbHVzdGVyUHJvZmlsZXIpCmxpYnJhcnkoQW5ub3RhdGlvbkh1YikKbGlicmFyeShlbnNlbWJsZGIpCmxpYnJhcnkodGlkeXZlcnNlKQpgYGAKYGBge3J9Cmluc3RhbGwucGFja2FnZXMoImRldnRvb2xzIikKZGV2dG9vbHM6Omluc3RhbGxfZ2l0aHViKCJzdGVwaGVudHVybmVyL2Fubm90YWJsZXMiKQpgYGAKCmBgYHtyfQpsaWJyYXJ5KGFubm90YWJsZXMpCmBgYAoKYGBge3J9CmdlbmU8LXJvd25hbWVzKGRpZmZleHBnZW5lcykKYGBgCmBgYHtyfQpnZW5lCmBgYAojIyMgRXhwb3J0IGRhdGFmcmFtZSBvZiBkaWZmZXJlbnRpYWxseSBleHByZXNzZWQgZ2VuZXMgdG8gY3N2IGZpbGUuIAoKRmlsdGVyIHRoZSBtYXRyaXggb2Ygbm9ybWFsaXplZCBnZW5lIGNvdW50cyB1c2luZyB0aGUgZ2VuZSBuYW1lcyBvZiB0aGUgMTE4IGRpZmZlcmVudGlhbGx5IGV4cHJlc3NlZCBnZW5lcyAoZmlsdGVyZWQgIGJ5IGxvZyBmb2xkIGNoYW5nZSBhbmQgcHZhbHVlKQoKYGBge3J9Cm5yb3coZGlmZmV4cGdlbmVzKQpgYGAKYGBge3J9CmhlYWQoZGlmZmV4cGdlbmVzKQpgYGAKYGBge3J9CnJvd3NfdG9fc2VsZWN0PC1yb3duYW1lcyhkaWZmZXhwZ2VuZXMpCmBgYAoKYGBge3J9Cm5vcm1fY291bnRzX2RpZmZleHBnZW5lczwtbm9ybWFsaXplZGNvdW50cy5tYXRyaXhbcm93c190b19zZWxlY3QsIF0KYGBgCmBgYHtyfQpucm93KG5vcm1fY291bnRzX2RpZmZleHBnZW5lcykKYGBgCmBgYHtyfQpub3JtX2NvdW50c19kaWZmZXhwZ2VuZXM8LW5vcm1hbGl6ZWRjb3VudHMubWF0cml4W3Jvd3NfdG9fc2VsZWN0LF0KYGBgCmBgYHtyfQpsZW5ndGgobm9ybV9jb3VudHNfZGlmZmV4cGdlbmVzKQpgYGAKCgpgYGB7cn0Kd3JpdGUuY3N2KG5vcm1fY291bnRzX2RpZmZleHBnZW5lcywnL1VzZXJzL2RhbmllbGFxdWlqYW5vL0RvY3VtZW50cy9HaXRIdWIvTWFjaGluZS1MZWFybmluZy1Db3Vyc2UtUHJvamVjdHMvRmluYWxfUHJvamVjdF9OZXVyb3RveGljaXR5X1ByZWRpY3Rpb24vRmluYWxfUHJvamVjdF9GaWxlcy9SU0VNX2RpZmZfZXhwX2dlbmVzLmNzdicsIHJvdy5uYW1lcyA9IFRSVUUpCmBgYAoKCmBgYHtyfQpocyA8LSBvcmcuSHMuZWcuZGIKbXkuc3ltYm9scyA8LSBnZW5lCkdFTkVJRF9FTlRSRVo8LXNlbGVjdChocywgCiAgICAgICBrZXlzID0gbXkuc3ltYm9scywKICAgICAgIGNvbHVtbnMgPSBjKCJFTlRSRVpJRCIsICJTWU1CT0wiKSwKICAgICAgIGtleXR5cGUgPSAiU1lNQk9MIikKR0VORUlEX0VOVFJFWgpgYGAKCmBgYHtyfQojQ29udmVydCB0aGUgbmFtZXMgb2YgYWxsIGdlbmVzIHRlc3RlZCBpbiB0aGUgZXhwZXJpbWVudCB0byBlbnRyZXogaWQKYWxsX2dlbmU8LXJvd25hbWVzKFJTRU1fYXZnKQpteS5zeW1ib2xzXzIgPC0gYWxsX2dlbmUKR0VORUlEX0VOVFJFWl8yPC1zZWxlY3QoaHMsIAogICAgICAga2V5cyA9IG15LnN5bWJvbHNfMiAsCiAgICAgICBjb2x1bW5zID0gYygiRU5UUkVaSUQiLCAiU1lNQk9MIiksCiAgICAgICBrZXl0eXBlID0gIlNZTUJPTCIpCkdFTkVJRF9FTlRSRVpfMgpgYGAKCgpgYGB7cn0KZ2dvIDwtIGdyb3VwR08oZ2VuZSAgICAgPSBHRU5FSURfRU5UUkVaJEVOVFJFWklELAogICAgICAgICAgICAgICBPcmdEYiAgICA9IG9yZy5Icy5lZy5kYiwKICAgICAgICAgICAgICAgb250ICAgICAgPSAiQlAiLAogICAgICAgICAgICAgICBsZXZlbCAgICA9IDUsCiAgICAgICAgICAgICAgIHJlYWRhYmxlID0gVFJVRSkKCmBgYAoKYGBge3J9CmhlYWQoZ2dvKQpgYGAKCmBgYHtyfQplZ28gPC0gZW5yaWNoR08oZ2VuZSAgICAgICAgICA9IEdFTkVJRF9FTlRSRVokRU5UUkVaSUQsCiAgICAgICAgICAgICAgICB1bml2ZXJzZSAgICAgID0gR0VORUlEX0VOVFJFWl8yJEVOVFJFWklELAogICAgICAgICAgICAgICAgT3JnRGIgICAgICAgICA9IG9yZy5Icy5lZy5kYiwKICAgICAgICAgICAgICAgIG9udCAgICAgICAgICAgPSAiQUxMIiwKICAgICAgICAgICAgICAgIHBBZGp1c3RNZXRob2QgPSAiQkgiLAogICAgICAgICAgICAgICAgcHZhbHVlQ3V0b2ZmICA9IDAuMDUsKQpoZWFkKGVnbykKYGBgCgoKCgoK</div>
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script type="module" src="https://s.brightspace.com/lib/bsi/20.22.5-185/unbundled/mathjax.js"></script><script type="text/javascript">document.addEventListener('DOMContentLoaded', function() {
+					if (document.querySelector('math') || /\$\$|\\\(|\\\[|\\begin{|\\ref{|\\eqref{/.test(document.body.innerHTML)) {
+						document.querySelectorAll('mspace[linebreak="newline"]').forEach(elm => {
+							elm.setAttribute('style', 'display: block; height: 0.5rem;');
+						});
+
+						window.D2L.MathJax.loadMathJax({
+							'outputScale': 1.3,
+							'renderLatex': true
+						});
+					}
+				});</script></body></html>
